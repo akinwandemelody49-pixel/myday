@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Premium Luxury / Modern SaaS Color Palette */
+  --color-gold-50: #fbf8f1;
+  --color-gold-100: #f4ebd6;
+  --color-gold-200: #e7d4ab;
+  --color-gold-300: #d6b87c;
+  --color-gold-400: #c29851;
+  --color-gold-500: #C5A059; /* Updated to Editorial gold */
+  --color-gold-600: #93642b;
+  --color-gold-700: #764c23;
+  --color-gold-800: #5d3b1f;
+  --color-gold-900: #4c311c;
+  --color-gold-950: #2c1a0e;
+
+  --color-luxury-cream: #FAFAFA; /* Updated to Editorial Light BG */
+  --color-luxury-charcoal: #1A1A1A; /* Updated to Editorial dark charcoal */
+  --color-luxury-slate: #1a1e1e;
+  
+  /* Editorial Aesthetic specific colors */
+  --color-editorial-dark: #1A1A1A;
+  --color-editorial-gold: #C5A059;
+  --color-editorial-brown: #8C7343;
+  --color-editorial-beige: #F2EDE4;
+  --color-editorial-border: #E5E1D8;
+  --color-editorial-bg: #FAFAFA;
+
+  /* Apple & Airbnb Purple/Gold inspired Luxury Style */
+  --color-primary-purple: #6C4CF1;
+  --color-primary-purple-hover: #5B3ED6;
+  --color-accent-gold: #F4B400;
+  --color-accent-gold-hover: #DCA200;
+}
+
+/* Base custom styles if needed */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #FAFAFA;
+  color: #1A1A1A;
+  font-family: var(--font-sans);
+}

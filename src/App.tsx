@@ -1,0 +1,647 @@
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Navbar } from './components/layout/Navbar';
+import { Sidebar } from './components/layout/Sidebar';
+import { Footer } from './components/layout/Footer';
+import { HomeView } from './components/views/HomeView';
+import { PlanWizard } from './components/views/PlanWizard';
+import { PlannerView } from './components/views/PlannerView';
+import { VendorsView } from './components/views/VendorsView';
+import { DashboardView } from './components/views/DashboardView';
+import { AIResultsView } from './components/views/AIResultsView';
+import { User, BirthdayPlan, Vendor } from './types';
+import { getStoredUser, saveStoredUser, DEFAULT_MOCK_USER } from './services/auth';
+import { getLocalBirthdayPlans, saveBirthdayPlans, getFirestoreBirthdayPlans, savePlanToFirestore, deletePlanFromFirestore } from './services/db';
+import { Sparkles, HelpCircle, CheckCircle2 } from 'lucide-react';
+
+import { LoginView } from './components/views/LoginView';
+import { SignupView } from './components/views/SignupView';
+import { ForgotPasswordView } from './components/views/ForgotPasswordView';
+import { auth } from './services/firebase';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState<string>('home');
+  const [user, setUser] = useState<User | null>(null);
+  const [plans, setPlans] = useState<BirthdayPlan[]>([]);
+  const [selectedPlanForResults, setSelectedPlanForResults] = useState<BirthdayPlan | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
+
+  // Handle manual history changes (back/forward browser buttons)
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
+
+  const navigate = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+  };
+
+  // Listen to Firebase Auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const loggedUser: User = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100',
+          emailVerified: firebaseUser.emailVerified,
+          createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
+        };
+        setUser(loggedUser);
+        saveStoredUser(loggedUser);
+      } else {
+        // If they logged out of firebase, clear the local session too
+        const storedUser = getStoredUser();
+        if (storedUser && storedUser.uid !== DEFAULT_MOCK_USER.uid) {
+          setUser(null);
+          saveStoredUser(null);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Sync state with local storage on startup
+  useEffect(() => {
+    const storedUser = getStoredUser();
+    if (storedUser) {
+      setUser(storedUser);
+      setActiveTab('dashboard');
+    }
+  }, []);
+
+  // Sync tab with URL paths
+  useEffect(() => {
+    if (currentPath === '/dashboard') {
+      if (activeTab === 'home') {
+        setActiveTab(user ? 'dashboard' : 'planner');
+      }
+    } else if (currentPath === '/') {
+      if (activeTab !== 'home' && activeTab !== 'plan-wizard' && activeTab !== 'planner' && activeTab !== 'vendors' && activeTab !== 'dashboard') {
+        setActiveTab('home');
+      }
+    }
+  }, [currentPath, user]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'home') {
+      navigate('/');
+    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard') {
+      navigate('/dashboard');
+    }
+  };
+
+  // Fetch from Firestore if user is logged in, else from local storage
+  useEffect(() => {
+    const loadPlans = async () => {
+      if (user) {
+        try {
+          const firestorePlans = await getFirestoreBirthdayPlans(user.uid);
+          if (firestorePlans && firestorePlans.length > 0) {
+            setPlans(firestorePlans);
+            saveBirthdayPlans(firestorePlans); // Keep local storage sync'd
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to load plans from Firestore, falling back to local storage", e);
+        }
+      }
+      
+      const localPlans = getLocalBirthdayPlans();
+      setPlans(localPlans);
+    };
+
+    loadPlans();
+  }, [user]);
+
+  const showNotification = (message: string) => {
+    setNotification(message);
+    setTimeout(() => {
+      setNotification(null);
+    }, 4000);
+  };
+
+  // Create plan triggers
+  const handleCreatePlanTrigger = () => {
+    setActiveTab('plan-wizard');
+  };
+
+  const handlePlanGenerated = async (newPlan: BirthdayPlan) => {
+    const planWithUser = user ? { ...newPlan, userId: user.uid } : newPlan;
+    const updatedPlans = [planWithUser, ...plans];
+    setPlans(updatedPlans);
+    saveBirthdayPlans(updatedPlans);
+
+    if (user) {
+      try {
+        await savePlanToFirestore(planWithUser);
+      } catch (e) {
+        console.error("Failed to save plan to Firestore", e);
+      }
+    }
+
+    setSelectedPlanForResults(planWithUser);
+    setActiveTab('ai-results');
+    showNotification(`Successfully orchestrated "${planWithUser.themeTitle}" via AI!`);
+  };
+
+  const handleUpdatePlan = async (updatedPlan: BirthdayPlan) => {
+    const updatedPlans = plans.map(p => p.id === updatedPlan.id ? updatedPlan : p);
+    setPlans(updatedPlans);
+    saveBirthdayPlans(updatedPlans);
+
+    if (user) {
+      try {
+        await savePlanToFirestore(updatedPlan);
+      } catch (e) {
+        console.error("Failed to update plan in Firestore", e);
+      }
+    }
+
+    showNotification('Workspace updated successfully.');
+  };
+
+  const handleDeletePlan = async (id: string) => {
+    const planToDelete = plans.find(p => p.id === id);
+    const updatedPlans = plans.filter(p => p.id !== id);
+    setPlans(updatedPlans);
+    saveBirthdayPlans(updatedPlans);
+
+    if (user) {
+      try {
+        await deletePlanFromFirestore(id);
+      } catch (e) {
+        console.error("Failed to delete plan from Firestore", e);
+      }
+    }
+
+    showNotification(`Removed plan for ${planToDelete?.celebrantName}.`);
+  };
+
+  // Link selected Vendor to the first planning/draft plan
+  const handleLinkVendorToPlan = (vendor: Vendor) => {
+    if (plans.length === 0) {
+      showNotification('Please create a birthday plan first to link this vendor!');
+      setActiveTab('plan-wizard');
+      return;
+    }
+    
+    // Pick the first plan as the active workspace target
+    const targetPlan = plans[0];
+    const category = vendor.category;
+    const updatedVendors = {
+      ...(targetPlan.selectedVendors || {}),
+      [category]: vendor.id
+    };
+
+    const updatedPlan: BirthdayPlan = {
+      ...targetPlan,
+      selectedVendors: updatedVendors,
+      updatedAt: new Date().toISOString()
+    };
+
+    handleUpdatePlan(updatedPlan);
+    showNotification(`Successfully linked "${vendor.name}" as your custom ${category}!`);
+  };
+
+  // Redirect authenticated users trying to visit guest-only auth pages
+  useEffect(() => {
+    if (user && ['/login', '/signup', '/forgot-password'].includes(currentPath)) {
+      navigate('/dashboard');
+    }
+  }, [user, currentPath]);
+
+  // Real Login and Logout handlers linked to Firebase Auth
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleStartPlanning = () => {
+    if (user) {
+      setActiveTab('plan-wizard');
+    } else {
+      navigate('/signup');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error('Sign out error', e);
+    }
+    setUser(null);
+    saveStoredUser(null);
+    showNotification('Logged out successfully.');
+    navigate('/');
+  };
+
+  // Dedicated full-screen rendering for Authentication views
+  if (currentPath === '/login') {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] font-sans">
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center space-x-2 px-5 py-3 rounded-full bg-neutral-900 border border-[#6C4CF1]/20 text-white text-xs font-medium shadow-xl"
+            >
+              <CheckCircle2 className="w-4 h-4 text-[#F4B400] shrink-0 animate-bounce" />
+              <span>{notification}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <LoginView
+          onNavigate={navigate}
+          onSuccess={(u) => {
+            setUser(u);
+            setActiveTab('dashboard');
+          }}
+          showNotification={showNotification}
+        />
+      </div>
+    );
+  }
+
+  if (currentPath === '/signup') {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] font-sans">
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center space-x-2 px-5 py-3 rounded-full bg-neutral-900 border border-[#6C4CF1]/20 text-white text-xs font-medium shadow-xl"
+            >
+              <CheckCircle2 className="w-4 h-4 text-[#F4B400] shrink-0 animate-bounce" />
+              <span>{notification}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <SignupView
+          onNavigate={navigate}
+          onSuccess={(u) => {
+            setUser(u);
+            setActiveTab('dashboard');
+          }}
+          showNotification={showNotification}
+        />
+      </div>
+    );
+  }
+
+  if (currentPath === '/forgot-password') {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] font-sans">
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center space-x-2 px-5 py-3 rounded-full bg-neutral-900 border border-[#6C4CF1]/20 text-white text-xs font-medium shadow-xl"
+            >
+              <CheckCircle2 className="w-4 h-4 text-[#F4B400] shrink-0 animate-bounce" />
+              <span>{notification}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <ForgotPasswordView
+          onNavigate={navigate}
+          showNotification={showNotification}
+        />
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] font-sans">
+        
+        {/* Floating Status Notification Toast */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center space-x-2 px-5 py-3 rounded-full bg-neutral-900 border border-[#6C4CF1]/20 text-white text-xs font-medium shadow-xl"
+            >
+              <CheckCircle2 className="w-4.5 h-4.5 text-[#F4B400] shrink-0 animate-bounce" />
+              <span>{notification}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Responsive Sidebar Layout */}
+        <Sidebar
+          user={user}
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+          onLogout={handleLogout}
+        />
+
+        {/* Workspace panel right of sidebar */}
+        <div className="flex-grow flex flex-col min-w-0 md:max-h-screen md:overflow-y-auto">
+          <main className="flex-grow pb-16 md:pb-8">
+            <AnimatePresence mode="wait">
+              {activeTab === 'dashboard' && (
+                <motion.div
+                  key="dashboard"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <DashboardView
+                    user={user}
+                    onNavigateTab={handleTabChange}
+                    onPlanBirthday={() => setActiveTab('plan-wizard')}
+                    onBrowseVendors={() => setActiveTab('vendors')}
+                    showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'payments' && (
+                <motion.div
+                  key="payments"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <DashboardView
+                    user={user}
+                    onNavigateTab={handleTabChange}
+                    onPlanBirthday={() => setActiveTab('plan-wizard')}
+                    onBrowseVendors={() => setActiveTab('vendors')}
+                    showNotification={showNotification}
+                    forceShowPayments={true}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'home' && (
+                <motion.div
+                  key="home"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <HomeView
+                    onStartPlanning={handleStartPlanning}
+                    onExploreVendors={() => setActiveTab('vendors')}
+                    onSelectQuickTheme={(vibe) => {
+                      setActiveTab('plan-wizard');
+                    }}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'plan-wizard' && (
+                <motion.div
+                  key="wizard"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <PlanWizard
+                    user={user}
+                    onPlanGenerated={handlePlanGenerated}
+                    onCancel={() => setActiveTab('dashboard')}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'planner' && (
+                <motion.div
+                  key="planner"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <PlannerView
+                    plans={plans}
+                    onCreatePlan={handleCreatePlanTrigger}
+                    onUpdatePlan={handleUpdatePlan}
+                    onDeletePlan={handleDeletePlan}
+                    onViewResults={(p) => {
+                      setSelectedPlanForResults(p);
+                      setActiveTab('ai-results');
+                    }}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'ai-results' && (
+                <motion.div
+                  key="ai-results"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <AIResultsView
+                    plan={selectedPlanForResults || plans[0] || {
+                      id: 'temp',
+                      userId: 'temp',
+                      celebrantName: 'Sarah',
+                      age: 28,
+                      eventDate: new Date().toISOString().split('T')[0],
+                      budget: 150000,
+                      guestCount: 20,
+                      vibe: 'elegant',
+                      interests: ['Fashion', 'Music'],
+                      status: 'planning',
+                      themeTitle: 'Sarah\'s 28th Elegance Jubilee',
+                      themeDescription: 'A custom elegant celebration crafted with love.'
+                    }}
+                    onSavePlan={() => {
+                      if (selectedPlanForResults) {
+                        handleUpdatePlan(selectedPlanForResults);
+                      }
+                    }}
+                    onEditPlan={() => {
+                      setActiveTab('planner');
+                    }}
+                    onBookVendors={() => {
+                      setActiveTab('vendors');
+                    }}
+                    onBack={() => {
+                      setActiveTab('dashboard');
+                    }}
+                    showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'vendors' && (
+                <motion.div
+                  key="vendors"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <VendorsView
+                    user={user}
+                    plans={plans}
+                    onLinkVendorToPlan={handleLinkVendorToPlan}
+                    activePlanName={plans[0]?.celebrantName}
+                    showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] font-sans">
+      
+      {/* Floating Status Notification Toast */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center space-x-2 px-5 py-3 rounded-full bg-neutral-900 border border-[#6C4CF1]/20 text-white text-xs font-medium shadow-xl"
+          >
+            <CheckCircle2 className="w-4 h-4 text-[#F4B400] shrink-0 animate-bounce" />
+            <span>{notification}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Header Navigation */}
+      <Navbar
+        user={user}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+        onNewPlan={handleStartPlanning}
+      />
+
+      {/* Main Container Workspace */}
+      <main className="flex-grow pb-16">
+        <AnimatePresence mode="wait">
+          {activeTab === 'dashboard' && user && (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <DashboardView
+                user={user}
+                onNavigateTab={handleTabChange}
+                onPlanBirthday={() => setActiveTab('plan-wizard')}
+                onBrowseVendors={() => setActiveTab('vendors')}
+                showNotification={showNotification}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'home' && (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <HomeView
+                onStartPlanning={handleStartPlanning}
+                onExploreVendors={() => setActiveTab('vendors')}
+                onSelectQuickTheme={(vibe) => {
+                  if (user) {
+                    setActiveTab('plan-wizard');
+                  } else {
+                    navigate('/signup');
+                  }
+                }}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'plan-wizard' && (
+            <motion.div
+              key="wizard"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.25 }}
+            >
+              <PlanWizard
+                user={user}
+                onPlanGenerated={handlePlanGenerated}
+                onCancel={() => setActiveTab('home')}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'planner' && (
+            <motion.div
+              key="planner"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <PlannerView
+                plans={plans}
+                onCreatePlan={handleCreatePlanTrigger}
+                onUpdatePlan={handleUpdatePlan}
+                onDeletePlan={handleDeletePlan}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'vendors' && (
+            <motion.div
+              key="vendors"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+                >
+              <VendorsView
+                user={user}
+                plans={plans}
+                onLinkVendorToPlan={handleLinkVendorToPlan}
+                activePlanName={plans[0]?.celebrantName}
+                showNotification={showNotification}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* Premium Footer */}
+      <Footer />
+    </div>
+  );
+}

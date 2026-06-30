@@ -1,0 +1,251 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents the user profile record for MyDay",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique identifier of the user matching their Firebase Auth UID"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "The full name of the user"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the user"
+        },
+        "profileImage": {
+          "type": "string",
+          "description": "URL to the user's profile image"
+        },
+        "city": {
+          "type": "string",
+          "description": "The user's home or current city"
+        },
+        "preferredStyle": {
+          "type": "string",
+          "description": "The user's preferred aesthetic celebration style"
+        },
+        "averageBudget": {
+          "type": "number",
+          "description": "Average budget the user is willing to spend"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "fullName", "email"]
+    },
+    "BirthdayPlan": {
+      "title": "BirthdayPlan",
+      "description": "Represents a custom or AI-generated birthday celebration plan",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this birthday plan"
+        },
+        "recipientName": {
+          "type": "string",
+          "description": "The name of the birthday celebrant/recipient"
+        },
+        "relationship": {
+          "type": "string",
+          "description": "Relationship of the user to the celebrant"
+        },
+        "birthdayDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the birthday celebration"
+        },
+        "age": {
+          "type": "integer",
+          "description": "The age the celebrant is turning"
+        },
+        "budget": {
+          "type": "number",
+          "description": "Calculated or designated budget in Naira"
+        },
+        "city": {
+          "type": "string",
+          "description": "City where the event will take place"
+        },
+        "guests": {
+          "type": "integer",
+          "description": "Number of estimated guests"
+        },
+        "celebrationStyle": {
+          "type": "string",
+          "description": "The preferred style or vibe of the celebration"
+        },
+        "interests": {
+          "type": "array",
+          "description": "List of celebrant interests or hobby tags"
+        },
+        "aiPlan": {
+          "type": "object",
+          "description": "AI orchestrated details, theme title, description, and itinerary"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "planning", "booked", "completed"],
+          "description": "Current state of the birthday plan"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "recipientName", "birthdayDate", "age", "budget", "guests", "status"]
+    },
+    "Vendor": {
+      "title": "Vendor",
+      "description": "Represents a service provider curated on the platform",
+      "type": "object",
+      "properties": {
+        "vendorName": {
+          "type": "string",
+          "description": "The public commercial name of the vendor"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Cakes", "Decorators", "Photographers", "Restaurants", "Gift Shops", "Entertainment", "Venues"],
+          "description": "Category of the vendor's service offerings"
+        },
+        "description": {
+          "type": "string",
+          "description": "A comprehensive biography and overview of their service"
+        },
+        "location": {
+          "type": "string",
+          "description": "Geographical address or operational city"
+        },
+        "images": {
+          "type": "array",
+          "description": "List of photo URLs showcasing their portfolio"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Direct phone number for booking"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Business contact email"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Average review rating from 1 to 5"
+        },
+        "priceRange": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "luxury"],
+          "description": "Categorized pricing index"
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Indicates whether the vendor is officially verified by MyDay"
+        }
+      },
+      "required": ["vendorName", "category", "description", "location", "rating", "priceRange", "verified"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Represents a vendor booking reservation made for a specific plan",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The user making the booking"
+        },
+        "vendorId": {
+          "type": "string",
+          "description": "The ID of the vendor booked"
+        },
+        "birthdayPlanId": {
+          "type": "string",
+          "description": "The ID of the birthday plan this booking belongs to"
+        },
+        "bookingStatus": {
+          "type": "string",
+          "enum": ["pending", "confirmed", "cancelled", "completed"],
+          "description": "Status of the reservation"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Total pricing for the booked service"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["unpaid", "partial", "paid", "refunded"],
+          "description": "Status of the payment for this booking"
+        },
+        "bookingDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date the booked service will be delivered"
+        }
+      },
+      "required": ["userId", "vendorId", "birthdayPlanId", "bookingStatus", "totalAmount", "paymentStatus"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Represents an alert or message sent to a user",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The user recipient ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Short header for the notification"
+        },
+        "message": {
+          "type": "string",
+          "description": "Full text body of the notification message"
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Whether the user has read the message"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "title", "message", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User account profiles"
+    },
+    "/birthdayPlans/{planId}": {
+      "schema": "BirthdayPlan",
+      "description": "Birthday plans generated or authored by users"
+    },
+    "/vendors/{vendorId}": {
+      "schema": "Vendor",
+      "description": "Curated list of premium service providers"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Vendor bookings linked to birthday plans"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User informational and transaction alerts"
+    }
+  }
+}

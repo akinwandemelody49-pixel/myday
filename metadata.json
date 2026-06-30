@@ -1,0 +1,6 @@
+{
+  "name": "MyDay",
+  "description": "MyDay is an AI-powered birthday planning platform that helps users create unforgettable, tailored birthday experiences with modern, luxury styling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
