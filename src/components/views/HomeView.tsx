@@ -33,23 +33,23 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const featuredInspirations = [
     {
       vibe: 'elegant',
-      title: 'Midnight Botanical Soirée',
-      image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=600',
-      tag: 'Botanical & Strings',
+      title: 'Royal Orchid & Jollof Dinner',
+      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600',
+      tag: 'Fine Dining & Live Sax',
       budget: '$$$$'
     },
     {
       vibe: 'luxurious',
-      title: 'Grand Velvet & Champagne',
-      image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&q=80&w=600',
-      tag: 'Couture Gastronomy',
+      title: 'Kwara Luxe Ballroom Soirée',
+      image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=600',
+      tag: 'Grand Banquet Hall',
       budget: '$$$$$'
     },
     {
       vibe: 'cozy',
-      title: 'Rustic Fireside Hearth',
+      title: 'Premium Palms Garden Toast',
       image: 'https://images.unsplash.com/photo-1545232979-8bf34eb9757b?auto=format&fit=crop&q=80&w=600',
-      tag: 'Intimate Lodge',
+      tag: 'Intimate Garden Gathering',
       budget: '$$$'
     }
   ];
@@ -115,22 +115,22 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   const testimonials = [
     {
-      quote: "MyDay turned my husband's 40th birthday into a masterpiece. The AI captured his love for mid-century design and vinyl records perfectly, aligning a private chef and a jazz trio in minutes.",
-      name: "Sophia Sterling",
+      quote: "MyDay turned my father's 60th birthday in Ilorin into an absolute masterpiece. The AI captured his love for rich local sax music and fine-dining perfectly, aligning a private gourmet chef and a live jazz band in minutes.",
+      name: "Funke Adeniyi",
       role: "Creative Director",
-      img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150"
+      img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=150"
     },
     {
-      quote: "As someone who hates planning, this was a lifesaver. Within 5 minutes, I had an hour-by-hour timeline, a spectacular cake concept, and recommendations for the best cocktail mixers in the city.",
-      name: "Julian Vance",
+      quote: "As someone who hates event planning, this was an absolute lifesaver. Within 5 minutes, I had a premium hour-by-hour timeline for my milestone party, a spectacular cake concept, and recommendations for vetted decorators.",
+      name: "Babajide Alao",
       role: "Tech Co-founder",
-      img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150"
+      img: "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=150"
     },
     {
-      quote: "The luxury aesthetic and level of details are unparalleled. The platform works exactly like booking an ultra-premium Airbnb experience, with the intelligent convenience of a personal Apple-grade assistant.",
-      name: "Marcus Dupont",
-      role: "Art Curator",
-      img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150"
+      quote: "The luxury aesthetic and attention to detail are unparalleled. It celebrated our local Kwara heritage with world-class execution, giving us a seamless, premium experience just like booking a high-end luxury resort.",
+      name: "Dr. Chioma Nwosu",
+      role: "Medical Practitioner & Art Curator",
+      img: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&q=80&w=150"
     }
   ];
 
@@ -172,38 +172,38 @@ export const HomeView: React.FC<HomeViewProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 border border-[#6C4CF1]/10 text-[#6C4CF1] text-xs font-semibold tracking-wide"
+            className="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 border border-[#6C4CF1]/10 text-[#6C4CF1] text-sm font-bold tracking-wide"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#F4B400] animate-pulse" />
-            <span className="font-sans uppercase tracking-wider text-[10px] font-bold">AI-Powered Birthday Studio</span>
+            <span className="font-sans uppercase tracking-wider text-[14px] font-extrabold">AI-Powered Birthday Studio</span>
           </motion.div>
-
+ 
           <div className="space-y-6">
             <motion.h1
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-[1.08] text-neutral-900"
+              className="text-[40px] sm:text-[48px] lg:text-[56px] font-display font-extrabold tracking-tight leading-[1.1] text-[#111827]"
             >
               Every Birthday Deserves to Be <br />
-              <span className="relative inline-block">
+              <span className="relative inline-block mt-2">
                 <span className="absolute -inset-1 bg-gradient-to-r from-[#6C4CF1]/10 to-[#F4B400]/10 rounded-lg blur-xs -z-10" />
                 <span className="bg-gradient-to-r from-[#6C4CF1] via-[#8E75F5] to-[#F4B400] bg-clip-text text-transparent">
                   Unforgettable.
                 </span>
               </span>
             </motion.h1>
-
+ 
             <motion.p
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
-              className="font-sans text-neutral-500 text-base sm:text-[17px] leading-relaxed font-light max-w-xl"
+              className="font-sans text-[#374151] text-[18px] leading-[1.8] font-medium max-w-xl"
             >
               MyDay uses AI to design personalized birthday experiences based on your relationship, personality, budget, and celebration style. From venues and cakes to gifts and surprises, everything is planned in minutes.
             </motion.p>
           </div>
-
+ 
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -216,7 +216,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onStartPlanning}
-                className="w-full sm:w-auto bg-[#6C4CF1] hover:bg-[#5B3ED6] text-white px-8 py-4 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300 shadow-lg shadow-[#6C4CF1]/20 hover:shadow-xl hover:shadow-[#6C4CF1]/30 flex items-center justify-center space-x-2 cursor-pointer border border-[#6C4CF1]/10"
+                className="w-full sm:w-auto bg-[#6C4CF1] hover:bg-[#5B3ED6] text-white px-9 py-4.5 rounded-full text-[16px] font-semibold tracking-wide transition-all duration-300 shadow-lg shadow-[#6C4CF1]/20 hover:shadow-xl hover:shadow-[#6C4CF1]/30 flex items-center justify-center space-x-2.5 cursor-pointer border border-[#6C4CF1]/10 h-[56px]"
               >
                 <span>✨ Plan My Birthday</span>
               </motion.button>
@@ -225,22 +225,22 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setShowWatchDemo(true)}
-                className="w-full sm:w-auto text-center border border-neutral-200 hover:border-[#6C4CF1] text-neutral-800 hover:text-[#6C4CF1] px-8 py-4 rounded-full text-xs font-bold tracking-widest uppercase transition-all duration-300 bg-white shadow-2xs hover:shadow-xs flex items-center justify-center space-x-2 cursor-pointer"
+                className="w-full sm:w-auto text-center border border-neutral-200 hover:border-[#6C4CF1] text-neutral-800 hover:text-[#6C4CF1] px-9 py-4.5 rounded-full text-[16px] font-semibold tracking-wide transition-all duration-300 bg-white shadow-2xs hover:shadow-xs flex items-center justify-center space-x-2.5 cursor-pointer h-[56px]"
               >
                 <span>▶ Watch Demo</span>
               </motion.button>
             </div>
-
+ 
             {/* Trust Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2 border-t border-neutral-100 max-w-md">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-4 border-t border-neutral-100 max-w-md">
               <div className="flex items-center space-x-1 text-[#F4B400] text-sm">
-                <Star className="w-4 h-4 fill-current" />
-                <Star className="w-4 h-4 fill-current" />
-                <Star className="w-4 h-4 fill-current" />
-                <Star className="w-4 h-4 fill-current" />
-                <Star className="w-4 h-4 fill-current" />
+                <Star className="w-4.5 h-4.5 fill-current" />
+                <Star className="w-4.5 h-4.5 fill-current" />
+                <Star className="w-4.5 h-4.5 fill-current" />
+                <Star className="w-4.5 h-4.5 fill-current" />
+                <Star className="w-4.5 h-4.5 fill-current" />
               </div>
-              <div className="text-xs font-medium text-neutral-500 tracking-wide">
+              <div className="text-[14px] font-bold text-[#374151] tracking-wide">
                 Trusted by people creating unforgettable celebrations.
               </div>
             </div>
@@ -417,18 +417,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </AnimatePresence>
 
       {/* 3. Trusted By Section */}
-      <section className="bg-neutral-50 border-y border-neutral-100 py-12 px-4">
-        <div className="max-w-7xl mx-auto text-center space-y-6">
-          <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-neutral-400">
+      <section className="bg-neutral-50 border-y border-neutral-100 py-16 px-4">
+        <div className="max-w-7xl mx-auto text-center space-y-8">
+          <p className="text-[14px] uppercase tracking-[0.25em] font-extrabold text-[#374151]">
             INTEGRATED CONCIERGE & TRUSTED CREATIVE PARTNERS
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-60">
+          <div className="flex flex-wrap items-center justify-center gap-x-16 gap-y-8 opacity-80">
             {trustedPartners.map((partner, idx) => (
               <div key={idx} className="flex flex-col items-center">
-                <span className="font-serif font-semibold text-base tracking-tight text-neutral-800">
+                <span className="font-serif font-extrabold text-[18px] tracking-tight text-[#111827]">
                   {partner.name}
                 </span>
-                <span className="text-[8px] font-mono uppercase tracking-widest text-neutral-400">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-neutral-500 font-bold mt-1">
                   {partner.role}
                 </span>
               </div>
@@ -438,37 +438,37 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 4. Features Section */}
-      <section id="features" className="py-24 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-20">
-        <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
-          <span className="inline-block px-3 py-1 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[10px] font-bold uppercase tracking-widest">
+      <section id="features" className="py-28 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-20">
+        <div className="text-center max-w-2xl mx-auto space-y-6 mb-20">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
             FEATURES INDEX
           </span>
-          <h2 className="text-3xl sm:text-4xl font-display font-bold text-neutral-900 tracking-tight">
+          <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight py-2">
             Designed for flawless celebrations.
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-500 leading-relaxed font-sans max-w-lg mx-auto">
+          <p className="text-[17px] sm:text-[18px] text-[#374151] leading-[1.75] font-sans max-w-lg mx-auto">
             Our technology stack takes care of every architectural detail so you can remain present as the perfect host.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {features.map((feature, idx) => (
             <motion.div
               key={idx}
               whileHover={{ y: -5 }}
               transition={{ duration: 0.2 }}
-              className="bg-white p-8 rounded-3xl border border-neutral-100 shadow-xs hover:shadow-lg hover:border-neutral-200/50 transition-all group flex flex-col justify-between"
+              className="bg-white p-10 rounded-3xl border border-neutral-100 shadow-xs hover:shadow-lg hover:border-neutral-200/50 transition-all group flex flex-col justify-between"
             >
-              <div className="space-y-5">
-                <div className="w-12 h-12 rounded-2xl bg-[#6C4CF1]/5 flex items-center justify-center border border-[#6C4CF1]/10 group-hover:bg-[#6C4CF1] group-hover:text-white transition-colors duration-300">
+              <div className="space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-[#6C4CF1]/5 flex items-center justify-center border border-[#6C4CF1]/10 group-hover:bg-[#6C4CF1] group-hover:text-white transition-colors duration-300">
                   <div className="group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
                   </div>
                 </div>
-                <h3 className="font-display font-bold text-lg text-neutral-950">
+                <h3 className="font-display font-extrabold text-[22px] text-[#111827]">
                   {feature.title}
                 </h3>
-                <p className="text-xs text-neutral-500 leading-relaxed font-sans">
+                <p className="text-[17px] text-[#374151] leading-[1.75] font-sans font-normal">
                   {feature.desc}
                 </p>
               </div>
@@ -478,36 +478,36 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 5. How It Works Section */}
-      <section id="how-it-works" className="bg-[#6C4CF1]/5 py-24 px-4 md:px-8 border-y border-[#6C4CF1]/10 scroll-mt-20">
+      <section id="how-it-works" className="bg-[#6C4CF1]/5 py-28 px-4 md:px-8 border-y border-[#6C4CF1]/10 scroll-mt-20">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
-            <span className="inline-block px-3 py-1 rounded-full bg-[#6C4CF1]/10 text-[#6C4CF1] text-[10px] font-bold uppercase tracking-widest">
+          <div className="text-center max-w-2xl mx-auto space-y-6 mb-20">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/10 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
               STEP-BY-STEP ORCHESTRATION
             </span>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-neutral-900 tracking-tight">
+            <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight py-2">
               An elegant planning sequence.
             </h2>
-            <p className="text-xs text-neutral-500 max-w-sm mx-auto font-sans">
+            <p className="text-[17px] text-[#374151] max-w-md mx-auto font-sans leading-[1.75]">
               Go from zero concept draft to locked-in booking in less than five minutes.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 relative">
             {steps.map((step, idx) => (
-              <div key={idx} className="relative bg-white p-8 rounded-3xl border border-neutral-100 shadow-xs flex flex-col justify-between">
+              <div key={idx} className="relative bg-white p-10 rounded-3xl border border-neutral-100 shadow-xs flex flex-col justify-between">
                 {/* Connecting lines for large screens */}
                 {idx < 2 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-[1px] bg-neutral-200 z-10" />
+                  <div className="hidden lg:block absolute top-1/2 -right-5 w-10 h-[1px] bg-neutral-200 z-10" />
                 )}
                 
-                <div className="space-y-4">
-                  <span className="font-mono text-xs font-bold text-[#F4B400] uppercase tracking-widest">
+                <div className="space-y-5">
+                  <span className="font-mono text-[14px] font-extrabold text-[#F4B400] uppercase tracking-widest">
                     {step.step}
                   </span>
-                  <h3 className="font-display font-bold text-lg text-neutral-900">
+                  <h3 className="font-display font-extrabold text-[22px] text-[#111827]">
                     {step.title}
                   </h3>
-                  <p className="text-xs text-neutral-500 leading-relaxed font-sans">
+                  <p className="text-[17px] text-[#374151] leading-[1.75] font-sans font-normal">
                     {step.desc}
                   </p>
                 </div>
@@ -518,31 +518,31 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* Curated Theme Previews (Integrated from earlier code) */}
-      <section className="py-24 px-4 md:px-8 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div className="space-y-3 text-left">
-            <span className="inline-block px-3 py-1 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[10px] font-bold uppercase tracking-widest">
+      <section className="py-28 px-4 md:px-8 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+          <div className="space-y-4 text-left">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
               DESIGN ARCHETYPES
             </span>
-            <h3 className="text-2xl sm:text-3xl font-display font-bold text-neutral-900 tracking-tight">
+            <h3 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight">
               Begin with curated inspiration.
             </h3>
-            <p className="text-xs text-neutral-400 font-sans">
+            <p className="text-[17px] text-[#374151] font-sans leading-[1.75]">
               Select an aesthetic archetype to instantiate a customizable timeline layout immediately.
             </p>
           </div>
           <Button 
             variant="outline" 
-            size="sm" 
+            size="md" 
             onClick={onStartPlanning} 
-            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-            className="hover:border-[#6C4CF1] hover:text-[#6C4CF1] self-start md:self-auto shrink-0"
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+            className="hover:border-[#6C4CF1] hover:text-[#6C4CF1] self-start md:self-auto shrink-0 font-semibold"
           >
             Interactive Studio
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {featuredInspirations.map((item, index) => (
             <Card
               key={index}
@@ -550,27 +550,28 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onClick={() => onSelectQuickTheme(item.vibe)}
               className="rounded-3xl border border-neutral-100 overflow-hidden cursor-pointer group hover:border-[#6C4CF1]/20 transition-all shadow-xs hover:shadow-lg"
             >
-              <div className="relative h-60 overflow-hidden">
+              <div className="relative h-64 overflow-hidden">
                 <img
                   src={item.image}
                   alt={item.title}
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                  referrerPolicy="no-referrer"
                 />
-                <span className="absolute top-4 left-4 inline-block px-2.5 py-1 text-[9px] uppercase tracking-wider font-mono font-bold text-white bg-neutral-950/70 backdrop-blur-md rounded-md">
+                <span className="absolute top-4 left-4 inline-block px-3 py-1.5 text-[12px] uppercase tracking-wider font-mono font-extrabold text-white bg-neutral-950/70 backdrop-blur-md rounded-md">
                   {item.tag}
                 </span>
-                <span className="absolute bottom-4 right-4 inline-block px-2.5 py-0.5 text-[10px] font-bold text-[#F4B400] bg-neutral-950 rounded-md">
+                <span className="absolute bottom-4 right-4 inline-block px-3 py-1 text-[13px] font-extrabold text-[#F4B400] bg-neutral-950 rounded-md">
                   {item.budget}
                 </span>
               </div>
-              <CardBody className="p-6 text-left">
-                <h4 className="font-display font-bold text-base text-neutral-900 mb-1 group-hover:text-[#6C4CF1] transition-colors">
+              <CardBody className="p-8 text-left">
+                <h4 className="font-display font-bold text-[22px] text-[#111827] mb-3 group-hover:text-[#6C4CF1] transition-colors">
                   {item.title}
                 </h4>
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-[10px] text-neutral-400 font-mono tracking-wider">PLAN ARCHETYPE</span>
-                  <span className="text-xs text-[#6C4CF1] font-semibold flex items-center">
-                    Select Draft <Compass className="w-3.5 h-3.5 ml-1" />
+                <div className="flex items-center justify-between mt-6">
+                  <span className="text-[12px] text-neutral-400 font-mono tracking-wider font-bold">PLAN ARCHETYPE</span>
+                  <span className="text-[16px] text-[#6C4CF1] font-bold flex items-center">
+                    Select Draft <Compass className="w-4 h-4 ml-1.5" />
                   </span>
                 </div>
               </CardBody>
@@ -580,39 +581,40 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 6. Testimonials Section */}
-      <section className="bg-neutral-50 border-y border-neutral-100 py-24 px-4 md:px-8">
+      <section className="bg-neutral-50 border-y border-neutral-100 py-28 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
-            <span className="inline-block px-3 py-1 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[10px] font-bold uppercase tracking-widest">
+          <div className="text-center max-w-2xl mx-auto space-y-6 mb-20">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
               CELEBRANT TESTIMONIALS
             </span>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-neutral-900 tracking-tight">
+            <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight py-2">
               Rave reviews from elegant hosts.
             </h2>
-            <p className="text-xs text-neutral-400 font-sans max-w-sm mx-auto">
+            <p className="text-[17px] text-[#374151] font-sans leading-[1.75] max-w-sm mx-auto">
               Read how our digital planning concierge orchestrates memorable physical experiences.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {testimonials.map((testimonial, idx) => (
-              <div key={idx} className="bg-white p-8 rounded-3xl border border-neutral-100 shadow-2xs flex flex-col justify-between space-y-6">
-                <div className="space-y-4">
-                  <Quote className="w-8 h-8 text-[#6C4CF1] opacity-20" />
-                  <p className="text-xs text-neutral-500 leading-relaxed font-sans italic">
+              <div key={idx} className="bg-white p-10 rounded-3xl border border-neutral-100 shadow-2xs flex flex-col justify-between space-y-8">
+                <div className="space-y-5">
+                  <Quote className="w-10 h-10 text-[#6C4CF1] opacity-25" />
+                  <p className="text-[17px] text-[#374151] leading-[1.75] font-sans italic font-normal">
                     "{testimonial.quote}"
                   </p>
                 </div>
 
-                <div className="flex items-center space-x-3 pt-4 border-t border-neutral-50">
+                <div className="flex items-center space-x-4 pt-6 border-t border-neutral-50">
                   <img
-                    src={testimonial.img}
-                    alt={testimonial.name}
-                    className="w-10 h-10 rounded-full object-cover border border-neutral-100"
+                     src={testimonial.img}
+                     alt={testimonial.name}
+                     className="w-12 h-12 rounded-full object-cover border border-neutral-100"
+                     referrerPolicy="no-referrer"
                   />
                   <div>
-                    <h4 className="text-xs font-bold text-neutral-900 font-sans">{testimonial.name}</h4>
-                    <p className="text-[10px] text-neutral-400 font-mono uppercase tracking-wider">{testimonial.role}</p>
+                    <h4 className="text-[16px] font-bold text-[#111827] font-sans">{testimonial.name}</h4>
+                    <p className="text-[12px] text-[#374151] font-mono font-bold uppercase tracking-wider mt-0.5">{testimonial.role}</p>
                   </div>
                 </div>
               </div>
@@ -622,20 +624,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 7. FAQ Section */}
-      <section id="faq" className="py-24 px-4 md:px-8 max-w-4xl mx-auto scroll-mt-20">
-        <div className="text-center space-y-4 mb-16">
-          <span className="inline-block px-3 py-1 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[10px] font-bold uppercase tracking-widest">
+      <section id="faq" className="py-28 px-4 md:px-8 max-w-4xl mx-auto scroll-mt-20">
+        <div className="text-center space-y-6 mb-20">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
             FAQ SEGMENT
           </span>
-          <h2 className="text-3xl sm:text-4xl font-display font-bold text-neutral-900 tracking-tight">
+          <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight py-2">
             Frequently asked questions.
           </h2>
-          <p className="text-xs text-neutral-400 font-sans">
+          <p className="text-[17px] text-[#374151] font-sans leading-[1.75]">
             Clear information about our automated planning system.
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {faqs.map((faq, idx) => (
             <div
               key={idx}
@@ -643,20 +645,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
             >
               <button
                 onClick={() => toggleFaq(idx)}
-                className="w-full flex items-center justify-between p-6 text-left cursor-pointer hover:bg-neutral-50/55 transition-colors"
+                className="w-full flex items-center justify-between p-8 text-left cursor-pointer hover:bg-neutral-50/55 transition-colors"
               >
-                <span className="font-display font-bold text-xs sm:text-sm text-neutral-900">
+                <span className="font-display font-bold text-[16px] sm:text-[18px] text-[#111827]">
                   {faq.q}
                 </span>
                 {openFaq === idx ? (
-                  <ChevronUp className="w-4 h-4 text-[#6C4CF1] shrink-0" />
+                  <ChevronUp className="w-5 h-5 text-[#6C4CF1] shrink-0" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-neutral-400 shrink-0" />
+                  <ChevronDown className="w-5 h-5 text-neutral-400 shrink-0" />
                 )}
               </button>
 
               {openFaq === idx && (
-                <div className="px-6 pb-6 pt-1 text-xs text-neutral-500 leading-relaxed font-sans border-t border-neutral-50 bg-neutral-50/20">
+                <div className="px-8 pb-8 pt-4 text-[17px] text-[#374151] leading-[1.75] font-sans border-t border-neutral-100 bg-neutral-50/20">
                   {faq.a}
                 </div>
               )}
@@ -666,32 +668,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 8. Final Call to Action */}
-      <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
-        <div className="relative bg-gradient-to-br from-[#6C4CF1] to-[#5B3ED6] text-white p-12 sm:p-16 md:p-24 rounded-3xl overflow-hidden shadow-xl text-center space-y-8">
+      <section className="py-24 px-4 md:px-8 max-w-7xl mx-auto">
+        <div className="relative bg-gradient-to-br from-[#6C4CF1] to-[#5B3ED6] text-white p-14 sm:p-20 md:p-28 rounded-3xl overflow-hidden shadow-xl text-center space-y-10">
           {/* Abstract ambient decor */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#F4B400]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#F4B400]/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 space-y-4 max-w-2xl mx-auto">
-            <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[#F4B400] text-[9px] uppercase tracking-widest font-mono font-bold">
-              <Sparkles className="w-3.5 h-3.5" />
+          <div className="relative z-10 space-y-6 max-w-2xl mx-auto">
+            <span className="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-[#F4B400] text-[12px] uppercase tracking-widest font-mono font-bold">
+              <Sparkles className="w-4 h-4" />
               <span>ORCHESTRATE YOUR CELEBRATION</span>
             </span>
-            <h2 className="text-3xl sm:text-5xl font-display font-bold tracking-tight text-white leading-tight">
+            <h2 className="text-[36px] sm:text-[48px] lg:text-[52px] font-display font-extrabold tracking-tight text-white leading-tight">
               Ready to create unforgettable birthdays?
             </h2>
-            <p className="text-xs sm:text-sm text-white/80 leading-relaxed max-w-lg mx-auto font-sans font-light">
+            <p className="text-[17px] sm:text-[18px] text-white/90 leading-[1.75] max-w-lg mx-auto font-sans font-normal">
               Create an account or start as a guest. Our intelligent algorithms are primed to map your visual taste palette.
             </p>
           </div>
 
-          <div className="relative z-10 pt-4">
+          <div className="relative z-10 pt-6">
             <button
               onClick={onStartPlanning}
-              className="bg-[#F4B400] hover:bg-[#DCA200] text-neutral-900 px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#F4B400]/20 flex items-center justify-center space-x-2.5 mx-auto cursor-pointer"
+              className="bg-[#F4B400] hover:bg-[#DCA200] text-neutral-900 px-9 py-4.5 rounded-full text-[16px] font-semibold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#F4B400]/20 flex items-center justify-center space-x-3.5 mx-auto cursor-pointer h-[56px]"
             >
               <span>Start Planning</span>
-              <ArrowRight className="w-4 h-4 text-neutral-900" />
+              <ArrowRight className="w-5 h-5 text-neutral-900" />
             </button>
           </div>
         </div>

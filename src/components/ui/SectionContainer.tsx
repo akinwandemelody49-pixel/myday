@@ -37,24 +37,24 @@ export const SectionContainer: React.FC<SectionContainerProps> = ({
         {/* Header Block */}
         {(title || subtitle || description || badge || rightAction) && (
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
-            <div className="max-w-2xl">
+            <div className="max-w-3xl">
               {badge && (
-                <span className="inline-block px-3 py-1 text-[10px] uppercase tracking-widest font-mono font-medium text-gold-600 bg-gold-50 border border-gold-200/50 rounded-full mb-3">
+                <span className="inline-block px-4 py-1.5 text-[12px] uppercase tracking-widest font-mono font-bold text-gold-600 bg-gold-50 border border-gold-200/50 rounded-full mb-4">
                   {badge}
                 </span>
               )}
               {subtitle && (
-                <h4 className="font-display text-xs uppercase tracking-widest font-semibold text-gold-500 mb-1">
+                <h4 className="font-display text-[14px] sm:text-[15px] uppercase tracking-widest font-bold text-gold-500 mb-2">
                   {subtitle}
                 </h4>
               )}
               {title && (
-                <h2 className="font-display font-bold text-3xl md:text-4xl text-neutral-950 tracking-tight leading-tight">
+                <h2 className="font-display font-extrabold text-[32px] sm:text-[38px] text-[#111827] tracking-tight leading-tight pb-1">
                   {title}
                 </h2>
               )}
               {description && (
-                <p className="mt-3 font-sans text-neutral-500 leading-relaxed text-sm md:text-base">
+                <p className="mt-4 font-sans text-[#374151] leading-[1.7] text-[17px] md:text-[18px] font-normal">
                   {description}
                 </p>
               )}

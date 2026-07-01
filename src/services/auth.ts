@@ -8,7 +8,7 @@ export const DEFAULT_MOCK_USER: User = {
   uid: 'user-melody',
   email: 'akinwandemelody49@gmail.com',
   displayName: 'Melody Akinwande',
-  photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+  photoURL: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=200',
   emailVerified: true,
   createdAt: new Date().toISOString()
 };

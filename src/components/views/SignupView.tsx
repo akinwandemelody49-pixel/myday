@@ -61,7 +61,7 @@ export const SignupView: React.FC<SignupViewProps> = ({
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: fullName,
-        photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100',
+        photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=100',
         emailVerified: firebaseUser.emailVerified,
         createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
       };
@@ -99,7 +99,7 @@ export const SignupView: React.FC<SignupViewProps> = ({
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: firebaseUser.displayName || 'Google User',
-        photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100',
+        photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=100',
         emailVerified: firebaseUser.emailVerified,
         createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
       };

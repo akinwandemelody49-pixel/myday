@@ -9,6 +9,10 @@ import { PlannerView } from './components/views/PlannerView';
 import { VendorsView } from './components/views/VendorsView';
 import { DashboardView } from './components/views/DashboardView';
 import { AIResultsView } from './components/views/AIResultsView';
+import { BusinessPlanView } from './components/views/BusinessPlanView';
+import { InvitationView } from './components/views/InvitationView';
+import { VendorOnboardingView } from './components/views/VendorOnboardingView';
+import { VendorDashboardView } from './components/views/VendorDashboardView';
 import { User, BirthdayPlan, Vendor } from './types';
 import { getStoredUser, saveStoredUser, DEFAULT_MOCK_USER } from './services/auth';
 import { getLocalBirthdayPlans, saveBirthdayPlans, getFirestoreBirthdayPlans, savePlanToFirestore, deletePlanFromFirestore } from './services/db';
@@ -52,7 +56,7 @@ export default function App() {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-          photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100',
+          photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=100',
           emailVerified: firebaseUser.emailVerified,
           createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
         };
@@ -86,7 +90,7 @@ export default function App() {
         setActiveTab(user ? 'dashboard' : 'planner');
       }
     } else if (currentPath === '/') {
-      if (activeTab !== 'home' && activeTab !== 'plan-wizard' && activeTab !== 'planner' && activeTab !== 'vendors' && activeTab !== 'dashboard') {
+      if (activeTab !== 'home' && activeTab !== 'plan-wizard' && activeTab !== 'planner' && activeTab !== 'vendors' && activeTab !== 'dashboard' && activeTab !== 'business-plan') {
         setActiveTab('home');
       }
     }
@@ -96,7 +100,7 @@ export default function App() {
     setActiveTab(tab);
     if (tab === 'home') {
       navigate('/');
-    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard') {
+    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard' || tab === 'business-plan') {
       navigate('/dashboard');
     }
   };
@@ -327,6 +331,12 @@ export default function App() {
     );
   }
 
+  if (currentPath === '/invite' || window.location.search.includes('planId=') || window.location.search.includes('invite=') || window.location.search.includes('data=')) {
+    return (
+      <InvitationView onGoHome={() => navigate('/')} />
+    );
+  }
+
   if (user) {
     return (
       <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] font-sans">
@@ -509,6 +519,33 @@ export default function App() {
                   />
                 </motion.div>
               )}
+
+              {activeTab === 'business-plan' && (
+                <motion.div
+                  key="business-plan"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <BusinessPlanView />
+                </motion.div>
+              )}
+
+              {activeTab === 'vendor-onboarding' && (
+                <motion.div
+                  key="vendor-onboarding"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <VendorOnboardingView
+                    onGoHome={() => setActiveTab('dashboard')}
+                    showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
             </AnimatePresence>
           </main>
         </div>
@@ -633,6 +670,48 @@ export default function App() {
                 plans={plans}
                 onLinkVendorToPlan={handleLinkVendorToPlan}
                 activePlanName={plans[0]?.celebrantName}
+                showNotification={showNotification}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'business-plan' && (
+            <motion.div
+              key="business-plan"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <BusinessPlanView />
+            </motion.div>
+          )}
+
+          {activeTab === 'vendor-onboarding' && (
+            <motion.div
+              key="vendor-onboarding"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <VendorOnboardingView
+                onGoHome={() => setActiveTab('home')}
+                showNotification={showNotification}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'vendor-dashboard' && (
+            <motion.div
+              key="vendor-dashboard"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <VendorDashboardView
+                onGoHome={() => setActiveTab('home')}
                 showNotification={showNotification}
               />
             </motion.div>

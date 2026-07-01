@@ -110,6 +110,7 @@ export interface DBVendor {
   rating: number;
   priceRange: 'low' | 'medium' | 'high' | 'luxury';
   verified: boolean;
+  availabilityStatus?: 'Available' | 'Fully Booked' | 'Weekends Only' | 'On Break';
 }
 
 export interface DBBooking {
@@ -121,6 +122,10 @@ export interface DBBooking {
   totalAmount: number;
   paymentStatus: 'unpaid' | 'partial' | 'paid' | 'refunded';
   bookingDate: string;
+  userName?: string;
+  userEmail?: string;
+  specialRequests?: string;
+  createdAt?: string;
 }
 
 export interface DBNotification {
@@ -276,6 +281,32 @@ export const addVendor = async (vendor: Omit<DBVendor, 'id'>): Promise<string> =
   }
 };
 
+export const updateVendor = async (vendorId: string, updates: Partial<DBVendor>): Promise<void> => {
+  const path = `vendors/${vendorId}`;
+  try {
+    const docRef = doc(db, 'vendors', vendorId);
+    await updateDoc(docRef, updates);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+};
+
+export const getVendorByEmail = async (email: string): Promise<DBVendor | null> => {
+  const path = 'vendors';
+  try {
+    const q = query(collection(db, 'vendors'), where('email', '==', email));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const docSnap = querySnapshot.docs[0];
+      return { ...docSnap.data(), id: docSnap.id } as DBVendor;
+    }
+    return null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+    return null;
+  }
+};
+
 // Seeding standard high-quality vendors for MyDay
 export const seedSampleVendors = async (sampleVendors: DBVendor[]): Promise<void> => {
   try {
@@ -313,6 +344,22 @@ export const getBookings = async (userId: string): Promise<DBBooking[]> => {
   const path = 'bookings';
   try {
     const q = query(collection(db, 'bookings'), where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+    const bookings: DBBooking[] = [];
+    querySnapshot.forEach((docSnap) => {
+      bookings.push({ ...docSnap.data(), id: docSnap.id } as DBBooking);
+    });
+    return bookings;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, path);
+    return [];
+  }
+};
+
+export const getBookingsForVendor = async (vendorId: string): Promise<DBBooking[]> => {
+  const path = 'bookings';
+  try {
+    const q = query(collection(db, 'bookings'), where('vendorId', '==', vendorId));
     const querySnapshot = await getDocs(q);
     const bookings: DBBooking[] = [];
     querySnapshot.forEach((docSnap) => {

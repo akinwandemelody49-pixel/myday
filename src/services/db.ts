@@ -1,127 +1,127 @@
-import { BirthdayPlan, Vendor } from '../types';
+import { BirthdayPlan, Vendor, VendorApplication } from '../types';
 
 // Standard Premium Vendors List for MyDay
 export const SAMPLE_VENDORS: Vendor[] = [
   {
     id: 'venue-1',
-    name: 'The Glass Pavilion',
+    name: 'The Glass Pavilion Centre',
     category: 'venue',
     rating: 4.9,
     reviewsCount: 124,
     priceRange: 'luxury',
     imageUrl: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=800',
-    location: 'Metropolitan Arts District',
-    description: 'An architectural masterpiece featuring floor-to-ceiling glass walls, curated botanical gardens, and stellar city views. Perfect for elegant evening soirées.',
+    location: 'Ilorin, Kwara State',
+    description: 'An architectural masterpiece featuring floor-to-ceiling glass walls, curated tropical gardens, and stunning illumination. Perfect for modern, elegant evening birthday soirées.',
     contactEmail: 'events@glasspavilion.com',
-    contactPhone: '+1 (555) 123-4567'
+    contactPhone: '+234 803 123 4567'
   },
   {
     id: 'venue-2',
-    name: 'Amberwood Estate Garden',
+    name: 'Amberwood Palms Garden',
     category: 'venue',
     rating: 4.8,
     reviewsCount: 89,
     priceRange: 'high',
     imageUrl: 'https://images.unsplash.com/photo-1545232979-8bf34eb9757b?auto=format&fit=crop&q=80&w=800',
-    location: 'Amberwood Hills',
-    description: 'A historic French-country manor wrapped in ivy, showcasing lush rolling lawns, white rose gardens, and sparkling fairy lights.',
-    contactEmail: 'concierge@amberwoodestate.com',
-    contactPhone: '+1 (555) 765-4321'
+    location: 'GRA, Ilorin',
+    description: 'A gorgeous premium outdoor garden wrapped in high palm trees, showing manicured lawns, white floral layouts, and sparkling fairy lights perfect for luxury garden birthdays.',
+    contactEmail: 'concierge@amberwood palms.com',
+    contactPhone: '+234 805 765 4321'
   },
   {
     id: 'venue-3',
-    name: 'The Foundry Loft',
+    name: 'Verve Grand Hall',
     category: 'venue',
     rating: 4.7,
     reviewsCount: 156,
     priceRange: 'medium',
-    imageUrl: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&q=80&w=800',
-    location: 'Downtown Industrial Loop',
-    description: 'A beautifully restored warehouse featuring raw brick walls, high timber beams, and industrial-chic metal windows with warm ambient lighting.',
-    contactEmail: 'bookings@foundryloft.com'
+    imageUrl: 'https://images.unsplash.com/photo-1505232458627-539c97b4ca15?auto=format&fit=crop&q=80&w=800',
+    location: 'Pipeline, Ilorin',
+    description: 'A beautifully designed contemporary events hall featuring high timber beams, modern industrial aesthetics, and gorgeous warm ambient lighting designs.',
+    contactEmail: 'bookings@vervegrand.com'
   },
   {
     id: 'catering-1',
-    name: 'Epicurean Table',
+    name: 'Epicurean African Cuisine',
     category: 'catering',
     rating: 4.9,
     reviewsCount: 112,
     priceRange: 'luxury',
-    imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&q=80&w=800',
-    location: 'Greater Metro Area',
-    description: 'Fine-dining multi-course tasting menus crafted from organic, hyper-local ingredients. Accompanied by interactive chef stations and sommelier wine pairings.',
-    contactEmail: 'chef@epicureantable.com'
+    imageUrl: 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?auto=format&fit=crop&q=80&w=800',
+    location: 'Kwara State Metro',
+    description: 'Fine-dining multi-course tasting menus highlighting upscale African gourmet delicacies, royal party Jollof rice, and custom culinary plated presentations with organic local ingredients.',
+    contactEmail: 'chef@epicureanfood.com'
   },
   {
     id: 'catering-2',
-    name: 'Harvest & Gather Co.',
+    name: 'Harvest Chops & Platters',
     category: 'catering',
     rating: 4.7,
     reviewsCount: 74,
     priceRange: 'medium',
-    imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800',
-    location: 'Greater Metro Area',
-    description: 'Artisanal grazing tables, rustic wood-fired small plates, and bespoke handcrafted botanical cocktails tailored to your theme.',
-    contactEmail: 'hello@harvestandgather.co'
+    imageUrl: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&q=80&w=800',
+    location: 'Ilorin Central',
+    description: 'Bespoke grazing tables, gourmet small chops towers, artisanal suya platters, and premium hibiscus-zobo mocktails tailored to elevate your birthday experience.',
+    contactEmail: 'hello@harvestchops.com'
   },
   {
     id: 'decor-1',
-    name: 'Golden Hour Florals & Styling',
+    name: 'Golden Hour Luxury Decor',
     category: 'decor',
     rating: 4.9,
     reviewsCount: 95,
     priceRange: 'high',
     imageUrl: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&q=80&w=800',
-    location: 'Design Quarter',
-    description: 'Curated tablescapes, structural floral installations, luxury linens, and warm, golden-hour custom lighting designs.',
+    location: 'Design Quarter, Ilorin',
+    description: 'Curated birthday balloon backdrops, majestic floral structures, premium tableware, and warm, golden-hour ambient custom lighting layouts.',
     contactEmail: 'design@goldenhourdecor.com'
   },
   {
     id: 'decor-2',
-    name: 'Noir Avant-Garde Decor',
+    name: 'Luxe Avant-Garde balloon & Florals',
     category: 'decor',
     rating: 4.8,
     reviewsCount: 53,
     priceRange: 'luxury',
-    imageUrl: 'https://images.unsplash.com/photo-1478812954026-9c750f0e89fc?auto=format&fit=crop&q=80&w=800',
-    location: 'Design Quarter',
-    description: 'Modern, minimalist, and striking visual elements. Think charcoal tones, glowing neon accents, and bold geometric structures.',
-    contactEmail: 'luxe@noiravantgarde.com'
+    imageUrl: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&q=80&w=800',
+    location: 'GRA, Ilorin',
+    description: 'Ultra-modern minimalist decorations. Think gorgeous organic balloon installations, glowing custom neon signs, and striking photo-booth background setups.',
+    contactEmail: 'luxe@avantgardedecor.com'
   },
   {
     id: 'entertainment-1',
-    name: 'Starlight Chamber Strings',
+    name: 'Crystal Strings & Afro-Sax Ensemble',
     category: 'entertainment',
     rating: 5.0,
     reviewsCount: 42,
     priceRange: 'luxury',
     imageUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&q=80&w=800',
-    location: 'City Center',
-    description: 'A premium classical string quartet performing elegant orchestral arrangements of contemporary pop, rock, and cinematic favorites.',
-    contactEmail: 'booking@starlightstrings.com'
+    location: 'Ilorin City Center',
+    description: 'A world-class live musical ensemble performing a beautiful fusion of classical strings, soulful saxophone solos, and traditional talking drum rhythms.',
+    contactEmail: 'booking@crystalstrings.com'
   },
   {
     id: 'entertainment-2',
-    name: 'Acoustic Soul Trio',
+    name: 'Premium Afro-Jazz Band & DJ',
     category: 'entertainment',
     rating: 4.8,
     reviewsCount: 88,
     priceRange: 'medium',
-    imageUrl: 'https://images.unsplash.com/photo-1487180142328-054b783fc471?auto=format&fit=crop&q=80&w=800',
-    location: 'Metropolitan',
-    description: 'Smooth, soulful acoustic versions of classic rhythm and blues, neo-soul, and warm jazz standards to create an upscale yet conversational backdrop.',
-    contactEmail: 'info@acousticsoultrio.com'
+    imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=800',
+    location: 'Kwara State Metro',
+    description: 'A highly charismatic MC and high-energy professional Nigerian DJ delivering smooth live sax sets, upbeat Afrobeats, Amapiano, and nostalgic highlife classics.',
+    contactEmail: 'info@premiumafrobeats.com'
   },
   {
     id: 'baking-1',
-    name: 'Atelier de Sucre (The Sugar Studio)',
+    name: 'Atelier de Sucre Custom Cakes',
     category: 'baking',
     rating: 4.9,
     reviewsCount: 165,
     priceRange: 'high',
     imageUrl: 'https://images.unsplash.com/photo-1535141192574-5d4897c13636?auto=format&fit=crop&q=80&w=800',
-    location: 'Northside Blvd',
-    description: 'Bespoke custom-crafted celebration cakes featuring intricate sugar flowers, velvet textures, and gold leaf accents. Flavors include Lavender Honey and Dark Chocolate Espresso.',
+    location: 'GRA, Ilorin',
+    description: 'Bespoke custom-crafted luxury Nigerian celebration cakes featuring intricate sugar flowers, velvet textures, and gold leaf accents. Exquisite flavors include Coconut Velvet and Salted Caramel.',
     contactEmail: 'cakes@atelierdesucre.com'
   },
   {
@@ -132,20 +132,20 @@ export const SAMPLE_VENDORS: Vendor[] = [
     reviewsCount: 62,
     priceRange: 'medium',
     imageUrl: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=800',
-    location: 'West End',
-    description: 'Sophisticated, modern, single-tier and multi-tier naked cakes with minimal styling and organic botanical garnishes.',
+    location: 'West End, Ilorin',
+    description: 'Sophisticated modern birthday cakes, gorgeous naked buttercream styles, custom message toppers, and organic fresh flower garnishes.',
     contactEmail: 'hello@minimalistcrumb.com'
   },
   {
     id: 'photography-1',
-    name: 'Vogue Lens Editorial',
+    name: 'Vogue Lens African Portraits',
     category: 'photography',
     rating: 4.9,
     reviewsCount: 71,
     priceRange: 'luxury',
-    imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=800',
-    location: 'Metro Area',
-    description: 'Editorial-style birthday portraiture and event coverage. Captures candid, elegant moments with a high-fashion, cinematic aesthetic.',
+    imageUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&q=80&w=800',
+    location: 'Kwara State Metro',
+    description: 'Editorial-style birthday photography. Capturing real candid laughter, beautiful traditional attire, and premium high-fashion portraits to cherish forever.',
     contactEmail: 'studio@voguelens.com'
   }
 ];
@@ -153,7 +153,7 @@ export const SAMPLE_VENDORS: Vendor[] = [
 // In-Memory & Local Storage persistence manager for Demo Mode
 const STORAGE_KEY = 'myday_birthday_plans';
 
-import { collection, query, where, getDocs, setDoc, doc, deleteDoc, getDocFromServer } from 'firebase/firestore';
+import { collection, query, where, getDocs, setDoc, doc, deleteDoc, getDocFromServer, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Validate Connection to Firestore as per the Firebase Integration Skill guidelines
@@ -170,6 +170,21 @@ async function testConnection() {
   }
 }
 testConnection();
+
+// Fetch a single plan from Firestore by plan ID (used for shared invitations/summaries)
+export const getFirestoreBirthdayPlan = async (planId: string): Promise<BirthdayPlan | null> => {
+  try {
+    const docRef = doc(db, 'birthday_plans', planId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data() as BirthdayPlan;
+    }
+    return null;
+  } catch (e) {
+    console.error('Error reading single plan from Firestore', e);
+    return null;
+  }
+};
 
 // Fetch plans from Firestore for the specific user
 export const getFirestoreBirthdayPlans = async (userId: string): Promise<BirthdayPlan[]> => {
@@ -294,3 +309,31 @@ export const saveBirthdayPlans = (plans: BirthdayPlan[]) => {
     console.error('Error saving plans locally', e);
   }
 };
+
+// Save a vendor application to Firestore
+export const saveVendorApplicationToFirestore = async (application: VendorApplication): Promise<void> => {
+  try {
+    const docRef = doc(db, 'vendorApplications', application.applicationId);
+    await setDoc(docRef, application);
+    console.log(`Vendor Application ${application.applicationId} saved to Firestore`);
+  } catch (e) {
+    console.error('Error saving vendor application to Firestore', e);
+    throw e;
+  }
+};
+
+// Fetch vendor applications from Firestore
+export const getVendorApplicationsFromFirestore = async (): Promise<VendorApplication[]> => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'vendorApplications'));
+    const apps: VendorApplication[] = [];
+    querySnapshot.forEach((docSnap) => {
+      apps.push(docSnap.data() as VendorApplication);
+    });
+    return apps;
+  } catch (e) {
+    console.error('Error fetching vendor applications from Firestore', e);
+    return [];
+  }
+};
+

@@ -223,7 +223,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               <CardBody className="p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 rounded-xl overflow-hidden bg-neutral-50 border border-neutral-100 shrink-0">
-                    <img src={vendorImage} alt={vendorName} className="w-full h-full object-cover" />
+                    <img src={vendorImage} alt={vendorName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
@@ -321,7 +321,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-lg bg-white rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 z-10 border border-neutral-100 font-sans"
+          className="relative w-full max-w-lg bg-white rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 z-10 border border-neutral-100 font-sans max-h-[90vh] overflow-y-auto"
         >
           <button 
             onClick={() => setSelectedInvoice(null)}
@@ -429,7 +429,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl space-y-6 z-10 border border-neutral-100 font-sans"
+          className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl space-y-6 z-10 border border-neutral-100 font-sans max-h-[90vh] overflow-y-auto"
         >
           <button 
             onClick={() => setIsProcessingPayment(null)}
@@ -587,45 +587,45 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
   }
 
   return (
-    <div id="premium-dashboard-container" className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-10">
+    <div id="premium-dashboard-container" className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-10 space-y-8 sm:space-y-12">
       
       {/* 1. Hero Welcome Segment */}
       <div 
         id="dashboard-hero-banner"
-        className="relative overflow-hidden rounded-3xl bg-radial from-[#6C4CF1]/8 to-[#6C4CF1]/2 border border-[#6C4CF1]/10 p-8 md:p-12 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+        className="relative overflow-hidden rounded-3xl bg-radial from-[#6C4CF1]/8 to-[#6C4CF1]/2 border border-[#6C4CF1]/10 p-6 sm:p-10 md:p-14 shadow-xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 sm:gap-8"
       >
         {/* Glow Spheres */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-[#6C4CF1]/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
         <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#F4B400]/4 rounded-full blur-3xl pointer-events-none -ml-16 -mb-16"></div>
 
-        <div className="space-y-3 z-10 max-w-xl">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#6C4CF1]/10 text-[#6C4CF1] rounded-full text-xs font-semibold tracking-wider uppercase">
-            <Sparkles className="w-3.5 h-3.5 text-[#F4B400] animate-spin" />
+        <div className="space-y-3 sm:space-y-4 z-10 max-w-2xl">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-[#6C4CF1]/10 text-[#6C4CF1] rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase">
+            <Sparkles className="w-4 h-4 text-[#F4B400] animate-spin" />
             <span>Premium Studio Membership</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-display font-extrabold text-neutral-900 tracking-tight">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-display font-extrabold text-[#111827] tracking-tight leading-[1.2]">
             {getGreeting()}, {user.displayName || 'Guest'} 👋
           </h2>
-          <p className="text-sm md:text-base text-neutral-500 font-light leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg text-[#374151] font-normal leading-relaxed">
             Ready to create another unforgettable celebration? Design timelines, match premium vendors, and customize experiences.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3.5 z-10 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full lg:w-auto z-10 shrink-0">
           <Button
             id="hero-plan-birthday-btn"
             onClick={onPlanBirthday}
             variant="primary"
-            className="bg-[#6C4CF1] hover:bg-[#5B3ED6] text-white px-6 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-md shadow-[#6C4CF1]/15 flex items-center space-x-2"
+            className="w-full sm:w-auto justify-center bg-[#6C4CF1] hover:bg-[#5B3ED6] text-white px-5 sm:px-7 py-4 sm:py-5 rounded-2xl text-sm sm:text-base font-bold uppercase tracking-widest transition-all duration-300 shadow-md shadow-[#6C4CF1]/15 flex items-center space-x-2"
           >
-            <Cake className="w-4 h-4 text-[#F4B400]" />
+            <Cake className="w-5 h-5 text-[#F4B400]" />
             <span>Plan a Birthday</span>
           </Button>
           <Button
             id="hero-browse-vendors-btn"
             onClick={onBrowseVendors}
             variant="secondary"
-            className="border-neutral-200 hover:border-[#6C4CF1] bg-white text-neutral-700 hover:text-[#6C4CF1] px-6 py-4 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all duration-300"
+            className="w-full sm:w-auto justify-center border-neutral-200 hover:border-[#6C4CF1] bg-white text-neutral-700 hover:text-[#6C4CF1] px-5 sm:px-7 py-4 sm:py-5 rounded-2xl text-sm sm:text-base font-bold uppercase tracking-wider transition-all duration-300"
           >
             Browse Vendors
           </Button>
@@ -633,26 +633,28 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
       </div>
 
       {/* 2. Core Dashboard Cards Grid */}
-      <div id="core-cards-section" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div id="core-cards-section" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         
         {/* Card 1: Saved Plans */}
         <Card 
           id="saved-plans-card"
-          className="border-neutral-100 hover:border-[#6C4CF1]/30 hover:shadow-lg hover:shadow-neutral-100/50 transition-all duration-300 cursor-pointer group bg-white"
+          className="border-neutral-100 hover:border-[#6C4CF1]/30 hover:shadow-lg hover:shadow-neutral-100/50 transition-all duration-300 cursor-pointer group bg-white h-full"
           onClick={() => onNavigateTab('planner')}
         >
-          <CardBody className="p-6 space-y-4">
-            <div className="w-12 h-12 bg-[#6C4CF1]/10 rounded-2xl flex items-center justify-center text-[#6C4CF1] transition-all duration-300 group-hover:scale-105">
-              <Calendar className="w-6 h-6" />
-            </div>
+          <CardBody className="p-6 sm:p-7 lg:p-8 flex flex-col justify-between h-full space-y-4 sm:space-y-5">
             <div>
-              <h3 className="font-display font-bold text-lg text-neutral-800 flex items-center justify-between">
-                <span>Saved Plans</span>
-                <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-[#6C4CF1] group-hover:translate-x-1 transition-all" />
-              </h3>
-              <p className="text-xs text-neutral-400 font-light mt-1.5 leading-relaxed">
-                View and manage your saved birthday plans.
-              </p>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#6C4CF1]/10 rounded-2xl flex items-center justify-center text-[#6C4CF1] transition-all duration-300 group-hover:scale-105 mb-4 sm:mb-5">
+                <Calendar className="w-6 h-6 sm:w-7 sm:h-7" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base sm:text-lg lg:text-[20px] text-neutral-900 flex items-center justify-between">
+                  <span>Saved Plans</span>
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-[#6C4CF1] group-hover:translate-x-1 transition-all" />
+                </h3>
+                <p className="text-[14px] sm:text-[15px] lg:text-[16px] text-neutral-600 font-normal mt-2.5 leading-relaxed">
+                  View and manage your saved birthday plans.
+                </p>
+              </div>
             </div>
           </CardBody>
         </Card>
@@ -660,21 +662,23 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         {/* Card 2: Upcoming Celebrations */}
         <Card 
           id="upcoming-celebrations-card"
-          className="border-neutral-100 hover:border-[#6C4CF1]/30 hover:shadow-lg hover:shadow-neutral-100/50 transition-all duration-300 cursor-pointer group bg-white"
+          className="border-neutral-100 hover:border-[#6C4CF1]/30 hover:shadow-lg hover:shadow-neutral-100/50 transition-all duration-300 cursor-pointer group bg-white h-full"
           onClick={() => onNavigateTab('planner')}
         >
-          <CardBody className="p-6 space-y-4">
-            <div className="w-12 h-12 bg-[#F4B400]/10 rounded-2xl flex items-center justify-center text-[#F4B400] transition-all duration-300 group-hover:scale-105">
-              <Clock className="w-6 h-6" />
-            </div>
+          <CardBody className="p-6 sm:p-7 lg:p-8 flex flex-col justify-between h-full space-y-4 sm:space-y-5">
             <div>
-              <h3 className="font-display font-bold text-lg text-neutral-800 flex items-center justify-between">
-                <span>Upcoming Celebrations</span>
-                <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-[#6C4CF1] group-hover:translate-x-1 transition-all" />
-              </h3>
-              <p className="text-xs text-neutral-400 font-light mt-1.5 leading-relaxed">
-                See birthdays you've planned and upcoming reminders.
-              </p>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#F4B400]/10 rounded-2xl flex items-center justify-center text-[#F4B400] transition-all duration-300 group-hover:scale-105 mb-4 sm:mb-5">
+                <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base sm:text-lg lg:text-[20px] text-neutral-900 flex items-center justify-between">
+                  <span>Upcoming Celebrations</span>
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-[#6C4CF1] group-hover:translate-x-1 transition-all" />
+                </h3>
+                <p className="text-[14px] sm:text-[15px] lg:text-[16px] text-neutral-600 font-normal mt-2.5 leading-relaxed">
+                  See birthdays you've planned and upcoming reminders.
+                </p>
+              </div>
             </div>
           </CardBody>
         </Card>
@@ -682,21 +686,23 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         {/* Card 3: Favorite Vendors */}
         <Card 
           id="favorite-vendors-card"
-          className="border-neutral-100 hover:border-[#6C4CF1]/30 hover:shadow-lg hover:shadow-neutral-100/50 transition-all duration-300 cursor-pointer group bg-white"
+          className="border-neutral-100 hover:border-[#6C4CF1]/30 hover:shadow-lg hover:shadow-neutral-100/50 transition-all duration-300 cursor-pointer group bg-white h-full"
           onClick={() => onNavigateTab('vendors')}
         >
-          <CardBody className="p-6 space-y-4">
-            <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 transition-all duration-300 group-hover:scale-105">
-              <Heart className="w-6 h-6 fill-rose-50" />
-            </div>
+          <CardBody className="p-6 sm:p-7 lg:p-8 flex flex-col justify-between h-full space-y-4 sm:space-y-5">
             <div>
-              <h3 className="font-display font-bold text-lg text-neutral-800 flex items-center justify-between">
-                <span>Favorite Vendors</span>
-                <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-[#6C4CF1] group-hover:translate-x-1 transition-all" />
-              </h3>
-              <p className="text-xs text-neutral-400 font-light mt-1.5 leading-relaxed">
-                Quick access to your trusted vendors.
-              </p>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 transition-all duration-300 group-hover:scale-105 mb-4 sm:mb-5">
+                <Heart className="w-6 h-6 sm:w-7 sm:h-7 fill-rose-50" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base sm:text-lg lg:text-[20px] text-neutral-900 flex items-center justify-between">
+                  <span>Favorite Vendors</span>
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-[#6C4CF1] group-hover:translate-x-1 transition-all" />
+                </h3>
+                <p className="text-[14px] sm:text-[15px] lg:text-[16px] text-neutral-600 font-normal mt-2.5 leading-relaxed">
+                  Quick access to your trusted vendors.
+                </p>
+              </div>
             </div>
           </CardBody>
         </Card>
@@ -704,23 +710,25 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         {/* Card 4: AI Suggestions */}
         <Card 
           id="ai-suggestions-card"
-          className="border-neutral-100 hover:border-[#6C4CF1]/30 hover:shadow-lg hover:shadow-neutral-100/50 transition-all duration-300 cursor-pointer group bg-white relative overflow-hidden"
+          className="border-neutral-100 hover:border-[#6C4CF1]/30 hover:shadow-lg hover:shadow-neutral-100/50 transition-all duration-300 cursor-pointer group bg-white relative overflow-hidden h-full"
           onClick={() => setActiveSuggestionModal(true)}
         >
           {/* subtle gold corner glow */}
           <div className="absolute top-0 right-0 w-16 h-16 bg-[#F4B400]/10 rounded-full blur-md"></div>
-          <CardBody className="p-6 space-y-4">
-            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 transition-all duration-300 group-hover:scale-105">
-              <Wand2 className="w-6 h-6" />
-            </div>
+          <CardBody className="p-6 sm:p-7 lg:p-8 flex flex-col justify-between h-full space-y-4 sm:space-y-5">
             <div>
-              <h3 className="font-display font-bold text-lg text-neutral-800 flex items-center justify-between">
-                <span>AI Suggestions</span>
-                <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-[#6C4CF1] group-hover:translate-x-1 transition-all" />
-              </h3>
-              <p className="text-xs text-neutral-400 font-light mt-1.5 leading-relaxed">
-                Personalized birthday ideas generated by AI.
-              </p>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 transition-all duration-300 group-hover:scale-105 mb-4 sm:mb-5">
+                <Wand2 className="w-6 h-6 sm:w-7 sm:h-7" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-base sm:text-lg lg:text-[20px] text-neutral-900 flex items-center justify-between">
+                  <span>AI Suggestions</span>
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 group-hover:text-[#6C4CF1] group-hover:translate-x-1 transition-all" />
+                </h3>
+                <p className="text-[14px] sm:text-[15px] lg:text-[16px] text-neutral-600 font-normal mt-2.5 leading-relaxed">
+                  Personalized birthday ideas generated by AI.
+                </p>
+              </div>
             </div>
           </CardBody>
         </Card>
@@ -728,11 +736,11 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
       </div>
 
       {/* 3. Quick Actions Grid */}
-      <div id="quick-actions-section" className="space-y-6">
+      <div id="quick-actions-section" className="space-y-6 pt-2">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-display font-bold text-neutral-900 tracking-tight">Quick Actions</h3>
-            <p className="text-xs text-neutral-400 font-light">Direct pathways to design components of your perfect day.</p>
+          <div className="space-y-1">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-[#111827] tracking-tight">Quick Actions</h3>
+            <p className="text-xs sm:text-sm md:text-base text-neutral-500 font-light leading-relaxed">Direct pathways to design components of your perfect day.</p>
           </div>
         </div>
 
@@ -847,22 +855,22 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
 
       {/* Real-time Payments Overview Section */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-display font-bold text-neutral-900 tracking-tight flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-[#6C4CF1]" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-[#111827] tracking-tight flex items-center gap-2">
+              <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-[#6C4CF1] shrink-0" />
               <span>Real-time Bookings & Payments</span>
             </h3>
-            <p className="text-xs text-neutral-400 font-light">
+            <p className="text-xs sm:text-sm md:text-base text-neutral-500 font-light leading-relaxed">
               Active vendor reservations and digital invoices linked directly to your Firestore node.
             </p>
           </div>
           <button 
             onClick={() => onNavigateTab('payments')}
-            className="text-xs font-semibold text-[#6C4CF1] hover:underline flex items-center animate-pulse"
+            className="text-xs sm:text-sm md:text-base font-semibold text-[#6C4CF1] hover:underline flex items-center self-start sm:self-center shrink-0"
           >
             <span>View All Payments</span>
-            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+            <ChevronRight className="w-4 h-4 ml-1" />
           </button>
         </div>
 
@@ -870,13 +878,13 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
       </div>
 
       {/* 4. Secondary Information (Recent Activity & Profile Snapshot) */}
-      <div id="activity-profile-split" className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div id="activity-profile-split" className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         
         {/* Left 2 Cols: Recent Activity */}
         <div className="lg:col-span-2 space-y-6">
-          <div>
-            <h3 className="text-xl font-display font-bold text-neutral-900 tracking-tight">Recent Activity</h3>
-            <p className="text-xs text-neutral-400 font-light">Keep track of the details you've finalized recently.</p>
+          <div className="space-y-1">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-[#111827] tracking-tight">Recent Activity</h3>
+            <p className="text-sm sm:text-base text-neutral-600 font-normal leading-relaxed">Keep track of the details you've finalized recently.</p>
           </div>
 
           <Card id="recent-activity-card" className="border-neutral-100 shadow-xs bg-white">
@@ -884,51 +892,57 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               <div className="divide-y divide-neutral-50">
                 
                 {/* Activity 1 */}
-                <div className="p-5 flex items-start space-x-4">
-                  <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
-                    <CheckCircle className="w-4.5 h-4.5" />
+                <div className="p-5 sm:p-7 flex items-start gap-4 sm:gap-6">
+                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shrink-0">
+                    <CheckCircle className="w-5 h-5" />
                   </div>
-                  <div className="flex-grow space-y-1">
-                    <p className="text-xs font-semibold text-neutral-800">
-                      Birthday plan created
-                    </p>
-                    <p className="text-[11px] text-neutral-400 font-light">
+                  <div className="flex-grow space-y-1.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <p className="text-[15px] sm:text-[16px] font-bold text-neutral-900">
+                        Birthday plan created
+                      </p>
+                      <span className="text-xs font-mono font-semibold text-neutral-400 sm:text-neutral-500 shrink-0">12m ago</span>
+                    </div>
+                    <p className="text-[14px] sm:text-[15px] text-neutral-600 font-normal leading-relaxed">
                       Successfully designed a whimsical pastel balloon setup for Jordan's 6th party.
                     </p>
                   </div>
-                  <span className="text-[10px] font-mono text-neutral-400 shrink-0">12m ago</span>
                 </div>
 
                 {/* Activity 2 */}
-                <div className="p-5 flex items-start space-x-4">
-                  <div className="w-9 h-9 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shrink-0">
-                    <Bookmark className="w-4.5 h-4.5" />
+                <div className="p-5 sm:p-7 flex items-start gap-4 sm:gap-6">
+                  <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shrink-0">
+                    <Bookmark className="w-5 h-5" />
                   </div>
-                  <div className="flex-grow space-y-1">
-                    <p className="text-xs font-semibold text-neutral-800">
-                      Vendor bookmarked
-                    </p>
-                    <p className="text-[11px] text-neutral-400 font-light">
+                  <div className="flex-grow space-y-1.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <p className="text-[15px] sm:text-[16px] font-bold text-neutral-900">
+                        Vendor bookmarked
+                      </p>
+                      <span className="text-xs font-mono font-semibold text-neutral-400 sm:text-neutral-500 shrink-0">2h ago</span>
+                    </div>
+                    <p className="text-[14px] sm:text-[15px] text-neutral-600 font-normal leading-relaxed">
                       Added 'Sugar&Spice Patisserie' to your favorites list for artisanal dessert catering.
                     </p>
                   </div>
-                  <span className="text-[10px] font-mono text-neutral-400 shrink-0">2h ago</span>
                 </div>
 
                 {/* Activity 3 */}
-                <div className="p-5 flex items-start space-x-4">
-                  <div className="w-9 h-9 bg-[#6C4CF1]/10 rounded-xl flex items-center justify-center text-[#6C4CF1] shrink-0">
-                    <PartyPopper className="w-4.5 h-4.5" />
+                <div className="p-5 sm:p-7 flex items-start gap-4 sm:gap-6">
+                  <div className="w-10 h-10 bg-[#6C4CF1]/10 rounded-xl flex items-center justify-center text-[#6C4CF1] shrink-0">
+                    <PartyPopper className="w-5 h-5" />
                   </div>
-                  <div className="flex-grow space-y-1">
-                    <p className="text-xs font-semibold text-neutral-800">
-                      Celebration completed
-                    </p>
-                    <p className="text-[11px] text-neutral-400 font-light">
+                  <div className="flex-grow space-y-1.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <p className="text-[15px] sm:text-[16px] font-bold text-neutral-900">
+                        Celebration completed
+                      </p>
+                      <span className="text-xs font-mono font-semibold text-neutral-400 sm:text-neutral-500 shrink-0">2d ago</span>
+                    </div>
+                    <p className="text-[14px] sm:text-[15px] text-neutral-600 font-normal leading-relaxed">
                       The Neon Glow arcade celebration was hosted successfully. Rate your experience!
                     </p>
                   </div>
-                  <span className="text-[10px] font-mono text-neutral-400 shrink-0">2d ago</span>
                 </div>
 
               </div>
@@ -938,31 +952,31 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
 
         {/* Right 1 Col: Quick Inspiration / Tips */}
         <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-display font-bold text-neutral-900 tracking-tight">Studio Tips</h3>
-            <p className="text-xs text-neutral-400 font-light">Curated planning insights.</p>
+          <div className="space-y-1">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-[#111827] tracking-tight">Studio Tips</h3>
+            <p className="text-sm sm:text-base text-neutral-600 font-normal leading-relaxed">Curated planning insights.</p>
           </div>
 
           <Card id="studio-tips-card" className="border-[#6C4CF1]/10 bg-radial from-[#6C4CF1]/3 to-transparent">
-            <CardBody className="p-6 space-y-4">
+            <CardBody className="p-6 sm:p-7 lg:p-8 space-y-5 sm:space-y-6">
               <div className="flex items-center space-x-3 text-[#6C4CF1]">
-                <Compass className="w-5 h-5" />
-                <span className="text-[11px] font-mono uppercase tracking-wider font-bold">Pro Advice</span>
+                <Compass className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-xs sm:text-sm font-mono uppercase tracking-wider font-extrabold">Pro Advice</span>
               </div>
               
-              <div className="space-y-3.5">
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-neutral-800">Book Early for High Season</h4>
-                  <p className="text-[11px] text-neutral-500 leading-relaxed font-light">
+              <div className="space-y-5 sm:space-y-6">
+                <div className="space-y-2">
+                  <h4 className="text-[15px] sm:text-[16px] font-bold text-neutral-900">Book Early for High Season</h4>
+                  <p className="text-[14px] sm:text-[15px] text-neutral-600 leading-relaxed font-normal">
                     Photographers and customized patisseries get booked out up to 4-6 weeks in advance during summer months. Match your dates today!
                   </p>
                 </div>
                 
                 <div className="h-px bg-neutral-100" />
 
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-neutral-800">Use AI Theme Prompters</h4>
-                  <p className="text-[11px] text-neutral-500 leading-relaxed font-light">
+                <div className="space-y-2">
+                  <h4 className="text-[15px] sm:text-[16px] font-bold text-neutral-900">Use AI Theme Prompters</h4>
+                  <p className="text-[14px] sm:text-[15px] text-neutral-600 leading-relaxed font-normal">
                     Type complex prompts in the wizard like 'cyberpunk botanical garden' to get highly unexpected custom ideas.
                   </p>
                 </div>
@@ -970,7 +984,6 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
             </CardBody>
           </Card>
         </div>
-
       </div>
 
       {/* Modals for Premium Interactivity (State Handled client-side gracefully) */}
@@ -991,7 +1004,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-xl bg-white rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 z-10 border border-neutral-100"
+              className="relative w-full max-w-xl bg-white rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 z-10 border border-neutral-100 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setActiveSuggestionModal(false)}
@@ -1064,7 +1077,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl text-center space-y-6 z-10 border border-neutral-100"
+              className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl text-center space-y-6 z-10 border border-neutral-100 max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setActiveQuickActionModal(null)}

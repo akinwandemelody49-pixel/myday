@@ -113,25 +113,25 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
           <input
             type="text"
             placeholder="Search venue names, catering chefs, florists..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-neutral-200 focus:border-gold-400 px-11 py-2.5 rounded-xl text-xs outline-none transition-colors"
+            className="w-full bg-white border border-neutral-200 focus:border-gold-400 px-12 h-[52px] rounded-xl text-[16px] md:text-[17px] outline-none transition-colors placeholder:text-neutral-400 font-normal"
           />
         </div>
 
         {/* Filters */}
         <div className="flex items-center space-x-3">
           {/* Price dropdown */}
-          <div className="relative flex items-center space-x-1.5 bg-white border border-neutral-200 rounded-xl px-3 py-2 text-xs">
-            <Filter className="w-3.5 h-3.5 text-neutral-400" />
+          <div className="relative flex items-center space-x-2 bg-white border border-neutral-200 rounded-xl px-4 h-[52px] text-[15px] sm:text-[16px]">
+            <Filter className="w-4 h-4 text-neutral-400" />
             <select
               value={priceFilter}
               onChange={(e) => setPriceFilter(e.target.value)}
-              className="bg-transparent outline-none cursor-pointer text-neutral-700 font-medium"
+              className="bg-transparent outline-none cursor-pointer text-neutral-700 font-bold"
             >
               <option value="all">Price Range (All)</option>
               <option value="medium">Medium ($$)</option>
@@ -143,14 +143,14 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
       </div>
 
       {/* Category Pills */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-4 mb-8 scrollbar-thin">
+      <div className="flex items-center space-x-3 overflow-x-auto pb-4 mb-8 scrollbar-thin">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full text-xs font-display tracking-wide uppercase font-medium transition-all duration-300 cursor-pointer ${
+            className={`px-6 py-3 rounded-full text-[14px] sm:text-[15px] font-display tracking-wide uppercase font-bold transition-all duration-300 cursor-pointer ${
               selectedCategory === cat
-                ? 'bg-gold-500 text-white border border-transparent shadow-xs font-semibold'
+                ? 'bg-[#6C4CF1] text-white border border-transparent shadow-xs'
                 : 'bg-neutral-50 text-neutral-500 border border-neutral-100 hover:bg-neutral-100'
             }`}
           >
@@ -173,6 +173,7 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
                   src={vendor.imageUrl}
                   alt={vendor.name}
                   className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                  referrerPolicy="no-referrer"
                 />
                 <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 text-[10px] uppercase font-mono tracking-wider font-semibold rounded-md shadow-xs text-neutral-800 border border-neutral-100/30">
                   {vendor.category}
@@ -181,30 +182,30 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
                   {getPriceBadge(vendor.priceRange)}
                 </span>
               </div>
-              <CardBody className="p-6 space-y-4">
+              <CardBody className="p-8 space-y-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-display font-semibold text-base text-neutral-900 line-clamp-1 group-hover:text-gold-600 transition-colors">
+                  <h3 className="font-display font-bold text-[20px] sm:text-[22px] text-[#111827] line-clamp-1 group-hover:text-gold-600 transition-colors">
                     {vendor.name}
                   </h3>
-                  <div className="flex items-center text-xs font-bold text-gold-600 space-x-1 shrink-0">
-                    <Star className="w-4 h-4 fill-gold-500 stroke-gold-500" />
+                  <div className="flex items-center text-[15px] font-bold text-gold-600 space-x-1.5 shrink-0">
+                    <Star className="w-4.5 h-4.5 fill-gold-500 stroke-gold-500" />
                     <span>{vendor.rating}</span>
                   </div>
                 </div>
 
-                <p className="text-xs font-sans text-neutral-500 line-clamp-2 leading-relaxed">
+                <p className="text-[17px] font-sans text-[#374151] line-clamp-2 leading-[1.7] font-normal">
                   {vendor.description}
                 </p>
 
-                <div className="flex items-center text-[11px] text-neutral-400 font-sans space-x-1">
-                  <MapPin className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                <div className="flex items-center text-[14px] sm:text-[15px] text-[#374151] font-sans space-x-1.5 font-medium">
+                  <MapPin className="w-4 h-4 text-neutral-400 shrink-0" />
                   <span className="truncate">{vendor.location}</span>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-neutral-50 pt-4 text-xs font-display">
-                  <span className="text-neutral-400 font-mono">CONCIERGE VETTED</span>
-                  <span className="text-gold-600 font-semibold flex items-center group-hover:underline">
-                    View Portfolio <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
+                <div className="flex items-center justify-between border-t border-neutral-100 pt-5 text-[15px] sm:text-[16px] font-display">
+                  <span className="text-neutral-400 font-mono font-bold tracking-wider text-[12px]">CONCIERGE VETTED</span>
+                  <span className="text-gold-600 font-bold flex items-center group-hover:underline">
+                    View Portfolio <ArrowUpRight className="w-4 h-4 ml-1" />
                   </span>
                 </div>
               </CardBody>
@@ -227,6 +228,7 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
                 src={activeModalVendor.imageUrl}
                 alt={activeModalVendor.name}
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
               />
               <span className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-1 text-xs uppercase font-mono tracking-wider font-semibold rounded-md shadow-sm">
                 Category: {activeModalVendor.category}

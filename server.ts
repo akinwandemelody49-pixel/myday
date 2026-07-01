@@ -11,6 +11,13 @@ const PORT = 3000;
 
 app.use(express.json());
 
+// API: Check if Gemini AI is configured
+app.get('/api/check-gemini', (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const isConfigured = !!apiKey && apiKey !== 'MY_GEMINI_API_KEY';
+  res.json({ isConfigured });
+});
+
 // API: Generate AI Birthday Plan
 app.post('/api/generate-plan', async (req, res) => {
   const { celebrantName, age, eventDate, budget, guestCount, vibe, interests } = req.body;

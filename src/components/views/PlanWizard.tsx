@@ -24,6 +24,7 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
 }) => {
   const [step, setStep] = useState<number>(1);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [loadingLabel, setLoadingLabel] = useState<string>('Saving curated birthday details to Firestore...');
   const [loadingDesc, setLoadingDesc] = useState<string>('Writing parameters to your secure account dashboard');
 
@@ -156,13 +157,55 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
   };
 
   const handleSubmitPlan = async () => {
+    setError(null);
+
+    // 1. Validate all required form fields before submission
+    if (!celebrantName.trim()) {
+      setError("Please specify the celebrant's name.");
+      return;
+    }
+    if (!relationship.trim()) {
+      setError("Please specify your relationship with the celebrant.");
+      return;
+    }
+    if (!eventDate.trim()) {
+      setError("Please specify the celebration date.");
+      return;
+    }
+    const ageNum = Number(age);
+    if (!age.trim() || isNaN(ageNum) || ageNum <= 0) {
+      setError("Please specify a valid target age greater than 0.");
+      return;
+    }
+    if (!city.trim()) {
+      setError("Please specify the city/location.");
+      return;
+    }
+    const guestNum = Number(guestCount);
+    if (!guestCount.trim() || isNaN(guestNum) || guestNum <= 0) {
+      setError("Please specify a valid guest count greater than 0.");
+      return;
+    }
+    if (!budgetRange.trim()) {
+      setError("Please select a budget range.");
+      return;
+    }
+    if (selectedStyles.length === 0) {
+      setError("Please select at least one celebration style.");
+      return;
+    }
+    if (selectedInterests.length === 0) {
+      setError("Please select at least one interest.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const numericBudget = getNumericBudget(budgetRange);
       const chosenVibe = getEventVibeFromStyles(selectedStyles);
       const planId = 'plan-' + Date.now();
 
-      // 1. Construct the questionnaire draft plan
+      // Construct the questionnaire draft plan
       const questionnairePlan: BirthdayPlan = {
         id: planId,
         userId: user?.uid || 'temp',
@@ -177,7 +220,6 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         
-        // Premium multi-step planner specific metadata fields
         relationship,
         city,
         budgetRange,
@@ -192,19 +234,30 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
       // 2. Save questionnaire answers to Firestore first
       setLoadingLabel('Saving questionnaire answers to Firestore...');
       setLoadingDesc('Writing your selection parameters to the secure database...');
-      if (user) {
+      try {
         await savePlanToFirestore(questionnairePlan);
-      } else {
-        // Wait briefly for smooth animation if guest/mock user
-        await new Promise((resolve) => setTimeout(resolve, 800));
+      } catch (firestoreErr) {
+        console.error("Firestore Save (Draft) Failed:", firestoreErr);
+        // We log detailed error to console, but don't abort to ensure we always perform an action.
       }
 
-      // 3. Show loading screen while AI generates the plan (this state is active)
-      setLoadingLabel('Activating Gemini AI to generate your plan...');
-      setLoadingDesc('Designing bespoke themes, ambiance blueprints, and hour-by-hour custom itinerary timelines...');
+      // Check if Gemini AI is configured
+      setLoadingLabel('Checking Gemini AI configuration...');
+      setLoadingDesc('Detecting connection to the Google GenAI secure API...');
+      
+      let isGeminiConfigured = false;
+      try {
+        const checkResponse = await fetch('/api/check-gemini');
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          isGeminiConfigured = !!checkData.isConfigured;
+        }
+      } catch (checkErr) {
+        console.warn("Failed to contact configuration API, falling back to mock detection:", checkErr);
+      }
 
+      let finalPlan: BirthdayPlan;
       const primaryStyle = selectedStyles[0] || 'Elegant';
-      // Fallback sample itinerary
       const sampleItinerary = [
         {
           id: 'it-1',
@@ -235,68 +288,138 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
         }
       ];
 
-      let aiData = null;
-      try {
-        const response = await fetch('/api/generate-plan', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            celebrantName,
-            age: Number(age),
-            eventDate,
-            budget: numericBudget,
-            guestCount: Number(guestCount),
-            vibe: chosenVibe,
-            interests: selectedInterests
-          })
-        });
+      if (isGeminiConfigured) {
+        // 4. Gemini AI is configured
+        setLoadingLabel('Activating Gemini AI to generate your plan...');
+        setLoadingDesc('Designing bespoke themes, ambiance blueprints, and hour-by-hour custom itinerary timelines...');
+        
+        let aiData = null;
+        try {
+          const response = await fetch('/api/generate-plan', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              celebrantName,
+              age: Number(age),
+              eventDate,
+              budget: numericBudget,
+              guestCount: Number(guestCount),
+              vibe: chosenVibe,
+              interests: selectedInterests
+            })
+          });
 
-        if (response.ok) {
-          aiData = await response.json();
-        } else {
-          console.warn('Backend API returned non-ok status. Falling back to high-fidelity mock AI plan.');
+          if (response.ok) {
+            aiData = await response.json();
+          } else {
+            throw new Error(`Server returned status ${response.status}`);
+          }
+        } catch (apiErr) {
+          console.error("Gemini Generation API call failed:", apiErr);
+          throw new Error("Gemini AI service encountered an error during plan synthesis.");
         }
-      } catch (e) {
-        console.warn('Network error or API failed. Falling back to high-fidelity mock AI plan.', e);
-      }
 
-      const generatedTitle = aiData?.themeTitle || `${primaryStyle} Jubilee for ${celebrantName}`;
-      const generatedDesc = aiData?.themeDescription || `A premium celebration custom tailored in ${city} for ${celebrantName} (${relationship}). Built with a designated budget range of ${budgetRange} styled around: ${selectedStyles.join(', ')}.`;
-      const generatedItinerary = aiData?.aiSuggestedItinerary || sampleItinerary;
+        const generatedTitle = aiData?.themeTitle || `Splendid celebration for ${celebrantName}`;
+        const generatedDesc = aiData?.themeDescription || `A premium celebration custom tailored in ${city} for ${celebrantName}.`;
+        const generatedItinerary = aiData?.aiSuggestedItinerary || sampleItinerary;
 
-      // 4. When the plan is ready, save it back to the birthdayPlans collection
-      setLoadingLabel('Finalizing and saving your AI birthday plan...');
-      setLoadingDesc(`Saving completed plan "${generatedTitle}" to your account database...`);
+        finalPlan = {
+          ...questionnairePlan,
+          ...aiData,
+          themeTitle: generatedTitle,
+          themeDescription: generatedDesc,
+          aiSuggestedItinerary: generatedItinerary,
+          selectedVendors: {
+            venue: chosenVibe === 'luxurious' ? 'venue-1' : chosenVibe === 'elegant' ? 'venue-2' : 'venue-3',
+            catering: numericBudget > 200000 ? 'catering-1' : 'catering-2',
+            decor: chosenVibe === 'luxurious' ? 'decor-2' : 'decor-1',
+            entertainment: numericBudget > 250000 ? 'entertainment-1' : 'entertainment-2',
+            baking: numericBudget > 100000 ? 'baking-1' : 'baking-2'
+          },
+          status: 'planning',
+          updatedAt: new Date().toISOString()
+        };
 
-      const finalPlan: BirthdayPlan = {
-        ...questionnairePlan,
-        themeTitle: generatedTitle,
-        themeDescription: generatedDesc,
-        aiSuggestedItinerary: generatedItinerary,
-        selectedVendors: {
-          venue: chosenVibe === 'luxurious' ? 'venue-1' : chosenVibe === 'elegant' ? 'venue-2' : 'venue-3',
-          catering: numericBudget > 200000 ? 'catering-1' : 'catering-2',
-          decor: chosenVibe === 'luxurious' ? 'decor-2' : 'decor-1',
-          entertainment: numericBudget > 250000 ? 'entertainment-1' : 'entertainment-2',
-          baking: numericBudget > 100000 ? 'baking-1' : 'baking-2'
-        },
-        status: 'planning', // update status to active planning
-        updatedAt: new Date().toISOString()
-      };
+        // Save generated plan to Firestore
+        setLoadingLabel('Saving your AI-generated birthday plan...');
+        setLoadingDesc(`Writing final completed plan "${generatedTitle}" to your account database...`);
+        try {
+          await savePlanToFirestore(finalPlan);
+        } catch (firestoreErr) {
+          console.error("Failed to save final AI plan to Firestore:", firestoreErr);
+        }
 
-      if (user) {
-        await savePlanToFirestore(finalPlan);
       } else {
-        // Wait briefly for smooth user transition
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        // 5. Gemini AI is NOT configured
+        setLoadingLabel('Generating realistic birthday plan data...');
+        setLoadingDesc('Creating a tailored celebration package with local design parameters...');
+
+        // Wait briefly to feel realistic and provide loading spinner feedback
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        let placeholderData = null;
+        try {
+          const response = await fetch('/api/generate-plan', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              celebrantName,
+              age: Number(age),
+              eventDate,
+              budget: numericBudget,
+              guestCount: Number(guestCount),
+              vibe: chosenVibe,
+              interests: selectedInterests
+            })
+          });
+
+          if (response.ok) {
+            placeholderData = await response.json();
+          }
+        } catch (apiErr) {
+          console.warn("Could not get placeholder from server, falling back to client generation:", apiErr);
+        }
+
+        const generatedTitle = placeholderData?.themeTitle || `${primaryStyle} Jubilee for ${celebrantName}`;
+        const generatedDesc = placeholderData?.themeDescription || `A premium celebration custom tailored in ${city} for ${celebrantName} (${relationship}). Built with a designated budget range of ${budgetRange} styled around: ${selectedStyles.join(', ')}.`;
+        const generatedItinerary = placeholderData?.aiSuggestedItinerary || sampleItinerary;
+
+        finalPlan = {
+          ...questionnairePlan,
+          ...placeholderData,
+          themeTitle: generatedTitle,
+          themeDescription: generatedDesc,
+          aiSuggestedItinerary: generatedItinerary,
+          selectedVendors: {
+            venue: chosenVibe === 'luxurious' ? 'venue-1' : chosenVibe === 'elegant' ? 'venue-2' : 'venue-3',
+            catering: numericBudget > 200000 ? 'catering-1' : 'catering-2',
+            decor: chosenVibe === 'luxurious' ? 'decor-2' : 'decor-1',
+            entertainment: numericBudget > 250000 ? 'entertainment-1' : 'entertainment-2',
+            baking: numericBudget > 100000 ? 'baking-1' : 'baking-2'
+          },
+          status: 'planning',
+          updatedAt: new Date().toISOString()
+        };
+
+        // Save generated placeholder plan to Firestore
+        setLoadingLabel('Saving your completed birthday plan...');
+        setLoadingDesc(`Writing final plan "${generatedTitle}" to your account database...`);
+        try {
+          await savePlanToFirestore(finalPlan);
+        } catch (firestoreErr) {
+          console.error("Failed to save placeholder plan to Firestore:", firestoreErr);
+        }
       }
 
-      // 5. Navigate to AI results page
+      // Redirect user to the AI Results page
       onPlanGenerated(finalPlan);
     } catch (err) {
-      console.error("Failed to generate plan:", err);
+      console.error("Error inside plan generation flow:", err);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsSaving(false);
     }
@@ -356,20 +479,20 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="font-display font-black text-2xl text-neutral-800 tracking-tight flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center">
-                      <Cake className="w-5 h-5 text-[#6C4CF1]" />
+                  <h3 className="font-display font-extrabold text-[24px] sm:text-[28px] text-[#111827] tracking-tight flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center shrink-0">
+                      <Cake className="w-6 h-6 text-[#6C4CF1]" />
                     </div>
                     Who are we celebrating?
                   </h3>
-                  <p className="text-xs font-sans text-neutral-400 mt-2 ml-12">
+                  <p className="text-[15px] sm:text-[16px] text-[#4B5563] font-medium mt-3 ml-15">
                     Let's begin by noting down the name and relationship to the beautiful celebrant.
                   </p>
                 </div>
 
                 <div className="space-y-5 pt-2">
                   <div>
-                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                    <label className="block text-[15px] font-semibold text-[#111827] mb-2.5">
                       Recipient Name
                     </label>
                     <input
@@ -377,27 +500,27 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                       placeholder="e.g. Melody Akinwande"
                       value={celebrantName}
                       onChange={(e) => setCelebrantName(e.target.value)}
-                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4 rounded-2xl text-sm font-sans text-neutral-800 outline-none transition-all shadow-xs"
+                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4.5 rounded-2xl text-[16px] font-sans text-[#374151] font-medium outline-none transition-all shadow-xs"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                    <label className="block text-[15px] font-semibold text-[#111827] mb-2.5">
                       Relationship
                     </label>
                     <div className="relative">
                       <select
                         value={relationship}
                         onChange={(e) => setRelationship(e.target.value)}
-                        className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4 rounded-2xl text-sm font-sans text-neutral-800 outline-none transition-all shadow-xs appearance-none cursor-pointer"
+                        className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4.5 rounded-2xl text-[16px] font-sans text-[#374151] font-medium outline-none transition-all shadow-xs appearance-none cursor-pointer"
                       >
                         {relationships.map((rel) => (
                           <option key={rel} value={rel}>{rel}</option>
                         ))}
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-neutral-500">
-                        <ChevronRight className="w-4 h-4 rotate-90" />
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#4B5563]">
+                        <ChevronRight className="w-4.5 h-4.5 rotate-90" />
                       </div>
                     </div>
                   </div>
@@ -416,33 +539,33 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="font-display font-black text-2xl text-neutral-800 tracking-tight flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-[#6C4CF1]" />
+                  <h3 className="font-display font-extrabold text-[24px] sm:text-[28px] text-[#111827] tracking-tight flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center shrink-0">
+                      <Calendar className="w-6 h-6 text-[#6C4CF1]" />
                     </div>
                     Celebration details
                   </h3>
-                  <p className="text-xs font-sans text-neutral-400 mt-2 ml-12">
+                  <p className="text-[15px] sm:text-[16px] text-[#4B5563] font-medium mt-3 ml-15">
                     Set the timeline parameters, location center, and guest threshold for this event.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
                   <div>
-                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                    <label className="block text-[15px] font-semibold text-[#111827] mb-2.5">
                       Birthday Date
                     </label>
                     <input
                       type="date"
                       value={eventDate}
                       onChange={(e) => setEventDate(e.target.value)}
-                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4 rounded-2xl text-sm font-sans text-neutral-800 outline-none transition-all shadow-xs"
+                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4.5 rounded-2xl text-[16px] font-sans text-[#374151] font-medium outline-none transition-all shadow-xs"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                    <label className="block text-[15px] font-semibold text-[#111827] mb-2.5">
                       Age
                     </label>
                     <input
@@ -452,13 +575,13 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                       placeholder="e.g. 28"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
-                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4 rounded-2xl text-sm font-sans text-neutral-800 outline-none transition-all shadow-xs"
+                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4.5 rounded-2xl text-[16px] font-sans text-[#374151] font-medium outline-none transition-all shadow-xs"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                    <label className="block text-[15px] font-semibold text-[#111827] mb-2.5">
                       City
                     </label>
                     <input
@@ -466,13 +589,13 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                       placeholder="e.g. Lagos, Abuja, London"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4 rounded-2xl text-sm font-sans text-neutral-800 outline-none transition-all shadow-xs"
+                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4.5 rounded-2xl text-[16px] font-sans text-[#374151] font-medium outline-none transition-all shadow-xs"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                    <label className="block text-[15px] font-semibold text-[#111827] mb-2.5">
                       Number of Guests
                     </label>
                     <input
@@ -481,7 +604,7 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                       placeholder="e.g. 35"
                       value={guestCount}
                       onChange={(e) => setGuestCount(e.target.value)}
-                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4 rounded-2xl text-sm font-sans text-neutral-800 outline-none transition-all shadow-xs"
+                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4.5 rounded-2xl text-[16px] font-sans text-[#374151] font-medium outline-none transition-all shadow-xs"
                       required
                     />
                   </div>
@@ -500,13 +623,13 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="font-display font-black text-2xl text-neutral-800 tracking-tight flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-[#6C4CF1]" />
+                  <h3 className="font-display font-extrabold text-[24px] sm:text-[28px] text-[#111827] tracking-tight flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center shrink-0">
+                      <DollarSign className="w-6 h-6 text-[#6C4CF1]" />
                     </div>
                     Financial scale
                   </h3>
-                  <p className="text-xs font-sans text-neutral-400 mt-2 ml-12">
+                  <p className="text-[15px] sm:text-[16px] text-[#4B5563] font-medium mt-3 ml-15">
                     Select your allocated budget tier. This maps matching vendors and decoration presets.
                   </p>
                 </div>
@@ -518,32 +641,32 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                       <div
                         key={b.label}
                         onClick={() => setBudgetRange(b.label)}
-                        className={`p-4.5 rounded-2xl border transition-all duration-300 flex items-center justify-between cursor-pointer group ${
+                        className={`p-5 rounded-2xl border transition-all duration-300 flex items-center justify-between cursor-pointer group ${
                           isSelected
-                            ? 'border-[#6C4CF1] bg-[#6C4CF1]/4 shadow-md shadow-[#6C4CF1]/2'
+                            ? 'border-[#6C4CF1] bg-[#6C4CF1]/4 shadow-md'
                             : 'border-neutral-150 bg-neutral-50/20 hover:bg-neutral-50/80 hover:border-neutral-300'
                         }`}
                       >
-                        <div className="flex items-center space-x-3.5">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm ${
                             isSelected ? 'bg-[#6C4CF1] text-white' : 'bg-neutral-100 text-neutral-500'
                           }`}>
                             ₦
                           </div>
                           <div>
-                            <p className={`text-sm font-bold ${isSelected ? 'text-[#6C4CF1]' : 'text-neutral-800'}`}>
+                            <p className={`text-[16px] font-bold ${isSelected ? 'text-[#6C4CF1]' : 'text-[#111827]'}`}>
                               {b.label}
                             </p>
-                            <p className="text-[10px] text-neutral-400 mt-0.5 leading-none">
+                            <p className="text-[13px] text-[#6B7280] font-medium mt-1 leading-normal">
                               {b.desc}
                             </p>
                           </div>
                         </div>
 
-                        <div className={`w-5.5 h-5.5 rounded-full border flex items-center justify-center transition-all ${
+                        <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${
                           isSelected ? 'border-[#6C4CF1] bg-[#6C4CF1]' : 'border-neutral-300 bg-white group-hover:border-neutral-400'
                         }`}>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3px]" />}
+                          {isSelected && <Check className="w-4 h-4 text-white stroke-[3px]" />}
                         </div>
                       </div>
                     );
@@ -563,43 +686,43 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="font-display font-black text-2xl text-neutral-800 tracking-tight flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-[#6C4CF1]" />
+                  <h3 className="font-display font-extrabold text-[24px] sm:text-[28px] text-[#111827] tracking-tight flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center shrink-0">
+                      <Sparkles className="w-6 h-6 text-[#6C4CF1]" />
                     </div>
                     Celebration Style
                   </h3>
-                  <p className="text-xs font-sans text-neutral-400 mt-2 ml-12">
+                  <p className="text-[15px] sm:text-[16px] text-[#4B5563] font-medium mt-3 ml-15">
                     Choose one or more aesthetic styles that characterize this birthday's ideal mood.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 max-h-[42vh] overflow-y-auto pr-1 pt-2">
+                <div className="grid grid-cols-2 gap-4 max-h-[42vh] overflow-y-auto pr-1 pt-2">
                   {celebrationStyles.map((style) => {
                     const isSelected = selectedStyles.includes(style.name);
                     return (
                       <div
                         key={style.name}
                         onClick={() => toggleStyle(style.name)}
-                        className={`p-3.5 rounded-2xl border transition-all duration-300 flex items-start space-x-3 cursor-pointer group select-none relative ${
+                        className={`p-5 rounded-2xl border transition-all duration-300 flex items-start space-x-3.5 cursor-pointer group select-none relative ${
                           isSelected
-                            ? 'border-[#6C4CF1] bg-[#6C4CF1]/4 shadow-sm shadow-[#6C4CF1]/2'
+                            ? 'border-[#6C4CF1] bg-[#6C4CF1]/4 shadow-sm'
                             : 'border-neutral-150 bg-neutral-50/10 hover:bg-neutral-50 hover:border-neutral-300'
                         }`}
                       >
-                        <span className="text-xl shrink-0 mt-0.5">{style.icon}</span>
+                        <span className="text-2xl shrink-0 mt-0.5">{style.icon}</span>
                         <div className="min-w-0">
-                          <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#6C4CF1]' : 'text-neutral-700 group-hover:text-neutral-900'}`}>
+                          <p className={`text-[15px] font-bold leading-tight ${isSelected ? 'text-[#6C4CF1]' : 'text-[#374151] group-hover:text-[#111827]'}`}>
                             {style.name}
                           </p>
-                          <p className="text-[9px] text-neutral-400 font-light leading-snug mt-1 truncate">
+                          <p className="text-[13px] text-[#6B7280] font-medium leading-snug mt-1.5 truncate">
                             {style.description}
                           </p>
                         </div>
 
                         {isSelected && (
-                          <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-[#6C4CF1] flex items-center justify-center">
-                            <Check className="w-2.5 h-2.5 text-white stroke-[3px]" />
+                          <div className="absolute top-4 right-4 w-5.5 h-5.5 rounded-full bg-[#6C4CF1] flex items-center justify-center">
+                            <Check className="w-3.5 h-3.5 text-white stroke-[3px]" />
                           </div>
                         )}
                       </div>
@@ -608,8 +731,8 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                 </div>
 
                 {selectedStyles.length === 0 && (
-                  <p className="text-[10px] text-rose-500 flex items-center gap-1.5 font-mono">
-                    <AlertCircle className="w-3.5 h-3.5" /> Please choose at least one celebration style.
+                  <p className="text-[12px] text-rose-500 flex items-center gap-1.5 font-mono">
+                    <AlertCircle className="w-4.5 h-4.5" /> Please choose at least one celebration style.
                   </p>
                 )}
               </motion.div>
@@ -660,7 +783,7 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                   </div>
 
                   <div className="pt-2">
-                    <label className="block text-xs font-mono font-bold uppercase tracking-wider text-neutral-500 mb-2 flex items-center gap-1.5">
+                    <label className="block text-[15px] font-semibold text-[#111827] mb-2.5 flex items-center gap-1.5">
                       <MessageSquare className="w-4 h-4 text-[#F4B400]" />
                       Tell us anything else about the birthday person (Optional)
                     </label>
@@ -669,7 +792,7 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                       rows={3}
                       value={additionalDetails}
                       onChange={(e) => setAdditionalDetails(e.target.value)}
-                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4 rounded-2xl text-sm font-sans text-neutral-800 outline-none transition-all shadow-xs resize-none leading-relaxed"
+                      className="w-full bg-neutral-50/50 border border-neutral-200 focus:border-[#6C4CF1] focus:bg-white px-5 py-4 rounded-2xl text-[16px] font-sans text-[#374151] outline-none transition-all shadow-xs resize-none leading-relaxed"
                     />
                   </div>
                 </div>
@@ -687,71 +810,81 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="font-display font-black text-2xl text-neutral-800 tracking-tight flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-[#F4B400] animate-pulse" />
+                  <h3 className="font-display font-extrabold text-[24px] sm:text-[28px] text-[#111827] tracking-tight flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#6C4CF1]/10 text-[#6C4CF1] flex items-center justify-center shrink-0">
+                      <Sparkles className="w-6 h-6 text-[#F4B400] animate-pulse" />
                     </div>
                     Review Celebration
                   </h3>
-                  <p className="text-xs font-sans text-neutral-400 mt-2 ml-12">
+                  <p className="text-[15px] sm:text-[16px] text-[#4B5563] font-medium mt-3 ml-15">
                     Confirm your details. We will save this customized birthday plan to your account database.
                   </p>
                 </div>
 
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-150 rounded-2xl flex items-start gap-3.5 shadow-sm">
+                    <AlertCircle className="w-5.5 h-5.5 text-red-500 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="text-sm font-bold text-red-800">Plan Generation Issue</h4>
+                      <p className="text-xs text-red-600 mt-1">{error}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Styled summary card */}
-                <div className="bg-neutral-50 rounded-3xl p-6 border border-neutral-150 space-y-5">
+                <div className="bg-neutral-50 rounded-3xl p-8 border border-neutral-150 space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400">Celebrant</span>
-                      <span className="text-xs font-bold text-neutral-800 block mt-1 truncate">{celebrantName}</span>
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280]">Celebrant</span>
+                      <span className="text-[15px] font-bold text-[#111827] block mt-1.5 truncate">{celebrantName}</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400">Relationship</span>
-                      <span className="text-xs font-bold text-neutral-800 block mt-1">{relationship}</span>
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280]">Relationship</span>
+                      <span className="text-[15px] font-bold text-[#111827] block mt-1.5">{relationship}</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400">Birthday Date</span>
-                      <span className="text-xs font-bold text-neutral-800 block mt-1">{eventDate}</span>
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280]">Birthday Date</span>
+                      <span className="text-[15px] font-bold text-[#111827] block mt-1.5">{eventDate}</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400">Target Age</span>
-                      <span className="text-xs font-bold text-neutral-800 block mt-1">{age} years</span>
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280]">Target Age</span>
+                      <span className="text-[15px] font-bold text-[#111827] block mt-1.5">{age} years</span>
                     </div>
                   </div>
 
-                  <div className="h-px bg-neutral-200/60" />
+                  <div className="h-px bg-neutral-200" />
 
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400">City / Location</span>
-                      <span className="text-xs font-bold text-neutral-800 block mt-1 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-[#6C4CF1]" />
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280]">City / Location</span>
+                      <span className="text-[15px] font-bold text-[#111827] block mt-1.5 flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4 text-[#6C4CF1]" />
                         <span>{city}</span>
                       </span>
                     </div>
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400">Guest Count</span>
-                      <span className="text-xs font-bold text-neutral-800 block mt-1 flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5 text-[#6C4CF1]" />
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280]">Guest Count</span>
+                      <span className="text-[15px] font-bold text-[#111827] block mt-1.5 flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-[#6C4CF1]" />
                         <span>{guestCount} Guests</span>
                       </span>
                     </div>
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400">Budget Range</span>
-                      <span className="text-xs font-bold text-[#F4B400] block mt-1 font-mono font-extrabold bg-[#F4B400]/5 px-2 py-0.5 rounded-lg border border-[#F4B400]/10 w-fit">
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280]">Budget Range</span>
+                      <span className="text-[15px] font-bold text-[#F4B400] block mt-1.5 font-mono font-extrabold bg-[#F4B400]/5 px-2.5 py-0.5 rounded-lg border border-[#F4B400]/10 w-fit">
                         {budgetRange}
                       </span>
                     </div>
                   </div>
 
-                  <div className="h-px bg-neutral-200/60" />
+                  <div className="h-px bg-neutral-200" />
 
-                  <div className="space-y-3.5">
+                  <div className="space-y-4">
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400 mb-1.5">Mood & Celebration Styles</span>
-                      <div className="flex flex-wrap gap-1.5">
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280] mb-2">Mood & Celebration Styles</span>
+                      <div className="flex flex-wrap gap-2">
                         {selectedStyles.map((s) => (
-                          <span key={s} className="px-2.5 py-1 bg-neutral-100 text-neutral-700 text-[10px] font-bold rounded-lg border border-neutral-200">
+                          <span key={s} className="px-3 py-1.5 bg-neutral-100 text-[#374151] text-[13px] font-bold rounded-lg border border-neutral-200">
                             {s}
                           </span>
                         ))}
@@ -759,10 +892,10 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                     </div>
 
                     <div>
-                      <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400 mb-1.5">Interests Tagged</span>
-                      <div className="flex flex-wrap gap-1.5">
+                      <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280] mb-2">Interests Tagged</span>
+                      <div className="flex flex-wrap gap-2">
                         {selectedInterests.map((i) => (
-                          <span key={i} className="px-2.5 py-1 bg-[#6C4CF1]/8 text-[#6C4CF1] text-[10px] font-bold rounded-lg border border-[#6C4CF1]/10">
+                          <span key={i} className="px-3 py-1.5 bg-[#6C4CF1]/8 text-[#6C4CF1] text-[13px] font-bold rounded-lg border border-[#6C4CF1]/10">
                             {i}
                           </span>
                         ))}
@@ -771,8 +904,8 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
 
                     {additionalDetails.trim() && (
                       <div>
-                        <span className="block text-[9px] font-mono font-bold uppercase tracking-wider text-neutral-400">Additional Instructions</span>
-                        <p className="text-[11px] text-neutral-500 leading-relaxed mt-1 italic font-light">
+                        <span className="block text-[11px] font-mono font-bold uppercase tracking-wider text-[#6B7280]">Additional Instructions</span>
+                        <p className="text-[15px] text-[#4B5563] leading-relaxed mt-2 italic font-medium">
                           "{additionalDetails.trim()}"
                         </p>
                       </div>
@@ -780,9 +913,9 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 bg-[#6C4CF1]/5 border border-[#6C4CF1]/10 rounded-2xl flex items-start gap-3">
-                  <Info className="w-5 h-5 text-[#6C4CF1] shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-neutral-500 leading-normal font-light">
+                <div className="p-5 bg-[#6C4CF1]/5 border border-[#6C4CF1]/10 rounded-2xl flex items-start gap-3.5">
+                  <Info className="w-5.5 h-5.5 text-[#6C4CF1] shrink-0 mt-0.5" />
+                  <p className="text-[14px] text-[#4B5563] leading-relaxed font-semibold">
                     Your details will be written as a premium birthday plan in Firestore. You can update budget parameters, timeline logs, and link local vendors from your Celebrations Hub.
                   </p>
                 </div>
@@ -802,9 +935,10 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
             <Button
               variant="primary"
               onClick={handleNext}
-              disabled={!isStepValid()}
+              disabled={isSaving || !isStepValid()}
+              isLoading={isSaving}
               className={`bg-[#6C4CF1] hover:bg-[#5B3ED6] text-white font-bold py-3.5 px-6 rounded-2xl text-xs uppercase tracking-wider shadow-md shadow-[#6C4CF1]/10 flex items-center space-x-2 cursor-pointer transition-all duration-300 ${
-                !isStepValid() ? 'opacity-50 cursor-not-allowed bg-neutral-300 hover:bg-neutral-300 text-neutral-500 shadow-none' : ''
+                isSaving || !isStepValid() ? 'opacity-50 cursor-not-allowed bg-neutral-300 hover:bg-neutral-300 text-neutral-500 shadow-none' : ''
               }`}
               rightIcon={step === 6 ? <Sparkles className="w-4 h-4 text-[#F4B400] animate-pulse" /> : <ArrowRight className="w-4 h-4" />}
             >

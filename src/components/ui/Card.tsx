@@ -54,14 +54,14 @@ export const Card: React.FC<CardProps> = ({
 export const CardHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = '',
-}) => <div className={`p-6 pb-4 border-b border-neutral-100/60 ${className}`}>{children}</div>;
+}) => <div className={`p-8 pb-6 md:p-10 md:pb-6 border-b border-neutral-100/60 ${className}`}>{children}</div>;
 
 export const CardBody: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = '',
-}) => <div className={`p-6 ${className}`}>{children}</div>;
+}) => <div className={`p-8 md:p-10 ${className}`}>{children}</div>;
 
 export const CardFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = '',
-}) => <div className={`p-6 pt-4 border-t border-neutral-100/60 bg-neutral-50/40 ${className}`}>{children}</div>;
+}) => <div className={`p-8 pt-6 md:p-10 md:pt-6 border-t border-neutral-100/60 bg-neutral-50/40 ${className}`}>{children}</div>;

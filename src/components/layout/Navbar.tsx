@@ -111,6 +111,45 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C4CF1] rounded-full" />
                 )}
               </button>
+
+              {/* Business Pitch tab */}
+              <button
+                onClick={() => setActiveTab('business-plan')}
+                className={`font-sans text-[11px] uppercase tracking-widest font-bold transition-colors relative py-2 cursor-pointer ${
+                  activeTab === 'business-plan' ? 'text-[#6C4CF1]' : 'text-neutral-500 hover:text-[#6C4CF1]'
+                }`}
+              >
+                Business Pitch
+                {activeTab === 'business-plan' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C4CF1] rounded-full" />
+                )}
+              </button>
+
+              {/* Vendor Portal tab */}
+              <button
+                onClick={() => setActiveTab('vendor-onboarding')}
+                className={`font-sans text-[11px] uppercase tracking-widest font-bold transition-colors relative py-2 cursor-pointer ${
+                  activeTab === 'vendor-onboarding' ? 'text-[#6C4CF1]' : 'text-neutral-500 hover:text-[#6C4CF1]'
+                }`}
+              >
+                Vendor Portal
+                {activeTab === 'vendor-onboarding' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C4CF1] rounded-full" />
+                )}
+              </button>
+
+              {/* Vendor Dashboard tab */}
+              <button
+                onClick={() => setActiveTab('vendor-dashboard')}
+                className={`font-sans text-[11px] uppercase tracking-widest font-bold transition-colors relative py-2 cursor-pointer ${
+                  activeTab === 'vendor-dashboard' ? 'text-[#6C4CF1]' : 'text-neutral-500 hover:text-[#6C4CF1]'
+                }`}
+              >
+                Vendor Dashboard
+                {activeTab === 'vendor-dashboard' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C4CF1] rounded-full" />
+                )}
+              </button>
             </>
           ) : (
             <>
@@ -157,6 +196,45 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 Vendors
                 {activeTab === 'vendors' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C4CF1] rounded-full" />
+                )}
+              </button>
+
+              {/* Business Pitch tab */}
+              <button
+                onClick={() => setActiveTab('business-plan')}
+                className={`font-sans text-[11px] uppercase tracking-widest font-bold transition-colors relative py-2 cursor-pointer ${
+                  activeTab === 'business-plan' ? 'text-[#6C4CF1]' : 'text-neutral-500 hover:text-[#6C4CF1]'
+                }`}
+              >
+                Business Pitch
+                {activeTab === 'business-plan' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C4CF1] rounded-full" />
+                )}
+              </button>
+
+              {/* Vendor Portal tab */}
+              <button
+                onClick={() => setActiveTab('vendor-onboarding')}
+                className={`font-sans text-[11px] uppercase tracking-widest font-bold transition-colors relative py-2 cursor-pointer ${
+                  activeTab === 'vendor-onboarding' ? 'text-[#6C4CF1]' : 'text-neutral-500 hover:text-[#6C4CF1]'
+                }`}
+              >
+                Vendor Portal
+                {activeTab === 'vendor-onboarding' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C4CF1] rounded-full" />
+                )}
+              </button>
+
+              {/* Vendor Dashboard tab */}
+              <button
+                onClick={() => setActiveTab('vendor-dashboard')}
+                className={`font-sans text-[11px] uppercase tracking-widest font-bold transition-colors relative py-2 cursor-pointer ${
+                  activeTab === 'vendor-dashboard' ? 'text-[#6C4CF1]' : 'text-neutral-500 hover:text-[#6C4CF1]'
+                }`}
+              >
+                Vendor Dashboard
+                {activeTab === 'vendor-dashboard' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6C4CF1] rounded-full" />
                 )}
               </button>
@@ -238,16 +316,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 
                 <div className="relative group">
                   <img
-                    src={user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100'}
+                    src={user.photoURL || 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=100'}
                     alt={user.displayName || 'User profile'}
                     className="w-10 h-10 rounded-full border border-neutral-100 shadow-2xs cursor-pointer group-hover:border-[#6C4CF1] transition-colors"
+                    referrerPolicy="no-referrer"
                   />
                   
                   {/* Micro dropdown menu on hover */}
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl py-2.5 border border-neutral-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                     <div className="px-4 py-2 border-b border-neutral-50">
                       <p className="text-xs font-bold text-neutral-800">{user.displayName}</p>
-                      <p className="text-[10px] text-neutral-400 truncate">{user.email}</p>
+                      <p className="text-[10px] text-neutral-400 truncate" title={user.email || ''}>{user.email}</p>
                     </div>
                     <button
                       onClick={() => setActiveTab('dashboard')}

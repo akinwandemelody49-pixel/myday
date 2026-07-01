@@ -85,3 +85,28 @@ export interface AIPlanRequest {
   vibe: EventVibe;
   interests: string[];
 }
+
+export interface VendorApplication {
+  applicationId: string;
+  businessName: string;
+  ownerName: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  category: string;
+  state: string;
+  city: string;
+  address: string;
+  yearsInBusiness: number;
+  description: string;
+  instagram: string;
+  facebook: string;
+  tiktok: string;
+  website?: string;
+  logo: string;
+  portfolioImages: string[];
+  priceList?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  submittedAt: string;
+}
+
