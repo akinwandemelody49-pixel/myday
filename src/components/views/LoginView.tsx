@@ -7,6 +7,7 @@ import { auth } from '../../services/firebase';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { User } from '../../types';
 import { saveStoredUser } from '../../services/auth';
+import { logSystemActivity } from '../../services/db_services';
 
 interface LoginViewProps {
   onNavigate: (path: string) => void;
@@ -51,6 +52,21 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
       saveStoredUser(loggedUser);
       onSuccess(loggedUser);
+      
+      // Log successful login
+      try {
+        await logSystemActivity({
+          type: 'login',
+          userEmail: loggedUser.email || '',
+          userName: loggedUser.displayName || 'Anonymous',
+          details: `User logged in successfully via Email Authentication`,
+          timestamp: new Date().toISOString(),
+          status: 'success'
+        });
+      } catch (logErr) {
+        console.error('Failed to write login log', logErr);
+      }
+
       showNotification('Successfully signed in to MyDay!');
       onNavigate('/dashboard');
     } catch (err: any) {
@@ -87,6 +103,21 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
       saveStoredUser(loggedUser);
       onSuccess(loggedUser);
+
+      // Log successful Google login
+      try {
+        await logSystemActivity({
+          type: 'login',
+          userEmail: loggedUser.email || '',
+          userName: loggedUser.displayName || 'Google User',
+          details: `User logged in successfully via Google OAuth Authentication`,
+          timestamp: new Date().toISOString(),
+          status: 'success'
+        });
+      } catch (logErr) {
+        console.error('Failed to write login log', logErr);
+      }
+
       showNotification('Welcome to MyDay via Google!');
       onNavigate('/dashboard');
     } catch (err: any) {

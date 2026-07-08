@@ -8,9 +8,11 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card, CardBody } from '../ui/Card';
-import { User } from '../../types';
+import { User, BirthdayPlan } from '../../types';
 import { getBookings, updateBookingStatus, DBBooking } from '../../services/db_services';
-import { SAMPLE_VENDORS } from '../../services/db';
+import { SAMPLE_VENDORS, getFirestoreBirthdayPlans, getLocalBirthdayPlans } from '../../services/db';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { TrendingUp, DollarSign } from 'lucide-react';
 
 interface DashboardViewProps {
   user: User;
@@ -41,6 +43,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<DBBooking | null>(null);
 
+  // Real-time birthday plans
+  const [plans, setPlans] = useState<BirthdayPlan[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState<boolean>(true);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+
   // Fetch from Firestore
   useEffect(() => {
     const fetchBookings = async () => {
@@ -57,6 +64,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       }
     };
     fetchBookings();
+  }, [user]);
+
+  // Fetch plans from Firestore / local storage fallbacks
+  useEffect(() => {
+    const fetchPlans = async () => {
+      if (!user) return;
+      try {
+        setLoadingPlans(true);
+        const data = await getFirestoreBirthdayPlans(user.uid);
+        if (data && data.length > 0) {
+          setPlans(data);
+          setSelectedPlanId(data[0].id || '');
+        } else {
+          const localPlans = getLocalBirthdayPlans();
+          setPlans(localPlans);
+          if (localPlans.length > 0) {
+            setSelectedPlanId(localPlans[0].id || '');
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load plans in Dashboard:", err);
+        const localPlans = getLocalBirthdayPlans();
+        setPlans(localPlans);
+        if (localPlans.length > 0) {
+          setSelectedPlanId(localPlans[0].id || '');
+        }
+      } finally {
+        setLoadingPlans(false);
+      }
+    };
+    fetchPlans();
   }, [user]);
 
   // Execute real-time checkout updates
@@ -532,6 +570,77 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
     setSearchQuery('');
   };
 
+  const normalizeCategory = (cat: string) => {
+    const c = cat ? cat.toLowerCase() : 'other';
+    if (c.includes('venue') || c.includes('hall')) return 'Venue & Space';
+    if (c.includes('catering') || c.includes('restaurant') || c.includes('food')) return 'Gourmet Catering';
+    if (c.includes('decor')) return 'Aesthetic Decor';
+    if (c.includes('entertainment') || c.includes('music') || c.includes('dj')) return 'Premium Entertainment';
+    if (c.includes('baking') || c.includes('cake') || c.includes('patisserie')) return 'Atelier Cakes';
+    if (c.includes('photo') || c.includes('camera')) return 'Photography';
+    if (c.includes('gift') || c.includes('shop')) return 'Gifts & Favors';
+    return 'Other Expenses';
+  };
+
+  const getBudgetBreakdown = (plan: BirthdayPlan | null, bookingsList: DBBooking[]) => {
+    if (!plan) return [];
+    
+    // Find bookings related to this user and categorize
+    const planBookings = bookingsList;
+    const budgetVal = plan.budget; // in NGN
+    
+    const bookedByCategory: { [key: string]: number } = {};
+    planBookings.forEach(b => {
+      const vendor = SAMPLE_VENDORS.find(v => v.id === b.vendorId);
+      const categoryName = normalizeCategory(vendor?.category || 'other');
+      const amountNGN = b.totalAmount; // natively in NGN
+      bookedByCategory[categoryName] = (bookedByCategory[categoryName] || 0) + amountNGN;
+    });
+
+    const categories = [
+      { name: 'Venue & Space', defaultPercent: 30, color: '#6C4CF1' },
+      { name: 'Gourmet Catering', defaultPercent: 25, color: '#10B981' },
+      { name: 'Aesthetic Decor', defaultPercent: 15, color: '#F59E0B' },
+      { name: 'Premium Entertainment', defaultPercent: 15, color: '#EC4899' },
+      { name: 'Atelier Cakes', defaultPercent: 10, color: '#3B82F6' },
+      { name: 'Photography', defaultPercent: 5, color: '#8B5CF6' }
+    ];
+
+    const chartData = categories.map(cat => {
+      const bookedAmount = bookedByCategory[cat.name] || 0;
+      const plannedAmount = Math.round(budgetVal * (cat.defaultPercent / 100));
+      const expenseAmount = bookedAmount > 0 ? bookedAmount : plannedAmount;
+      const isBooked = bookedAmount > 0;
+      
+      return {
+        name: cat.name,
+        value: expenseAmount,
+        color: cat.color,
+        isBooked,
+        bookedAmount,
+        plannedAmount,
+        percentage: Math.round((expenseAmount / budgetVal) * 100)
+      };
+    });
+
+    const totalExpenses = chartData.reduce((sum, d) => sum + d.value, 0);
+    const remainingBudget = Math.max(0, budgetVal - totalExpenses);
+
+    if (remainingBudget > 0) {
+      chartData.push({
+        name: 'Unallocated Balance',
+        value: remainingBudget,
+        color: '#E5E7EB',
+        isBooked: false,
+        bookedAmount: 0,
+        plannedAmount: remainingBudget,
+        percentage: Math.round((remainingBudget / budgetVal) * 100)
+      });
+    }
+
+    return chartData;
+  };
+
   // Fully route payments layout when forceShowPayments is activated
   if (forceShowPayments) {
     return (
@@ -733,6 +842,222 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
           </CardBody>
         </Card>
 
+      </div>
+
+      {/* Dynamic Budget & Expense Analytics Section with Recharts Donut Chart */}
+      <div id="budget-analytics-section" className="space-y-6 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-[#111827] tracking-tight flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-[#6C4CF1]" />
+              <span>Budget & Expense Orchestration</span>
+            </h3>
+            <p className="text-xs sm:text-sm md:text-base text-neutral-500 font-light leading-relaxed">
+              Visualize your planned category allocations against actual reservation ledger items in real-time.
+            </p>
+          </div>
+          
+          {/* Plan selector if multiple plans exist */}
+          {plans.length > 0 && (
+            <div className="flex items-center space-x-2 bg-neutral-50 border border-neutral-100 p-1.5 rounded-xl self-start sm:self-auto shadow-2xs">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 pl-2">Select Plan:</span>
+              <select
+                value={selectedPlanId}
+                onChange={(e) => setSelectedPlanId(e.target.value)}
+                className="bg-transparent text-xs text-neutral-800 font-semibold outline-none cursor-pointer pr-4 font-sans"
+              >
+                {plans.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.celebrantName}'s {p.age}th • {p.themeTitle || 'Theme Plan'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {plans.length === 0 ? (
+          <Card className="border-neutral-100 p-8 sm:p-12 text-center bg-white">
+            <CardBody className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
+              <div className="w-16 h-16 bg-[#6C4CF1]/8 rounded-full flex items-center justify-center text-[#6C4CF1]">
+                <DollarSign className="w-8 h-8" />
+              </div>
+              <h4 className="font-display font-bold text-lg text-neutral-800">No active budget model found</h4>
+              <p className="text-sm text-neutral-500 leading-relaxed">
+                Once you generate or custom-model an AI birthday plan, your interactive budget allocation and ledger breakdowns will auto-render here.
+              </p>
+              <Button onClick={onPlanBirthday} variant="primary" className="bg-[#6C4CF1] hover:bg-[#5B3ED6] font-bold text-xs uppercase tracking-wider rounded-xl">
+                Design Your Plan
+              </Button>
+            </CardBody>
+          </Card>
+        ) : (
+          (() => {
+            const plan = plans.find(p => p.id === selectedPlanId) || plans[0];
+            const chartData = getBudgetBreakdown(plan, bookings);
+            const totalNGN = plan.budget;
+            const totalSpentNGN = chartData.filter(d => d.name !== 'Unallocated Balance' && d.isBooked).reduce((sum, d) => sum + d.bookedAmount, 0);
+            const totalPlannedNGN = chartData.filter(d => d.name !== 'Unallocated Balance').reduce((sum, d) => sum + d.value, 0);
+            
+            return (
+              <Card className="border-neutral-100 overflow-hidden bg-white shadow-xs">
+                <CardBody className="p-6 sm:p-8 lg:p-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                    
+                    {/* Left/Center Column: Recharts Donut Chart */}
+                    <div className="lg:col-span-5 flex flex-col items-center justify-center relative bg-neutral-50/50 p-6 rounded-3xl border border-neutral-100/50">
+                      <div className="w-full h-[260px] relative flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={chartData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={65}
+                              outerRadius={90}
+                              paddingAngle={3}
+                              dataKey="value"
+                            >
+                              {chartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              formatter={(value: any, name: any, props: any) => {
+                                const payload = props.payload;
+                                if (name === 'Unallocated Balance') {
+                                  return [`₦${value.toLocaleString()}`, 'Unallocated'];
+                                }
+                                return [
+                                  `₦${value.toLocaleString()} (${payload.percentage}%)`, 
+                                  payload.isBooked ? `${name} (Booked)` : `${name} (Estimated)`
+                                ];
+                              }}
+                              contentStyle={{ 
+                                backgroundColor: '#1F2937', 
+                                border: 'none', 
+                                borderRadius: '12px',
+                                color: '#F9FAFB',
+                                fontSize: '12px',
+                                padding: '10px 14px',
+                                fontFamily: 'Inter, sans-serif'
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        
+                        {/* Inside Donut Text Center */}
+                        <div className="absolute flex flex-col items-center justify-center text-center">
+                          <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest">Total Budget</span>
+                          <span className="text-2xl sm:text-3xl font-display font-extrabold text-neutral-900 leading-tight">
+                            ₦{totalNGN.toLocaleString()}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-[#6C4CF1] mt-0.5">
+                            NGN
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Summary Metrics */}
+                      <div className="grid grid-cols-2 gap-4 w-full border-t border-neutral-100/70 pt-5 mt-3 text-center">
+                        <div>
+                          <p className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider">Booked Services</p>
+                          <p className="text-base font-bold text-[#10B981] font-mono mt-0.5">₦{totalSpentNGN.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider">Estimated Remaining</p>
+                          <p className="text-base font-bold text-[#6C4CF1] font-mono mt-0.5">₦{Math.max(0, totalPlannedNGN - totalSpentNGN).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Detailed Breakdown Ledger */}
+                    <div className="lg:col-span-7 space-y-6">
+                      <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+                        <h4 className="font-display font-bold text-lg text-neutral-900">Bespoke Expense Breakdown</h4>
+                        <span className="text-xs font-mono font-semibold bg-[#6C4CF1]/10 text-[#6C4CF1] px-2.5 py-1 rounded-md">
+                          Base Currency: NGN (₦)
+                        </span>
+                      </div>
+
+                      <div className="grid gap-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                        {chartData.map((item, idx) => {
+                          if (item.name === 'Unallocated Balance') {
+                            return (
+                              <div key={idx} className="flex items-center justify-between p-3.5 bg-neutral-50 rounded-2xl border border-dashed border-neutral-200">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-3 h-3 rounded-full bg-neutral-300" />
+                                  <span className="text-sm font-semibold text-neutral-500">Unallocated Reserve</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-sm font-bold text-neutral-500 font-mono">₦{item.value.toLocaleString()}</span>
+                                  <span className="text-[10px] font-mono font-medium text-neutral-400 block">{item.percentage}% of total</span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div 
+                              key={idx} 
+                              className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all hover:bg-neutral-50/50 ${
+                                item.isBooked 
+                                  ? 'border-[#10B981]/20 bg-[#10B981]/1' 
+                                  : 'border-neutral-100 bg-white'
+                              }`}
+                            >
+                              <div className="flex items-center space-x-3.5">
+                                <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                                <div>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-sm sm:text-base font-bold text-neutral-800">{item.name}</span>
+                                    {item.isBooked && (
+                                      <span className="inline-flex items-center text-[9px] font-mono font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm">
+                                        Booked
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-neutral-400 font-light font-sans mt-0.5 block">
+                                    {item.isBooked 
+                                      ? `Actual reservation: ₦${item.bookedAmount.toLocaleString()}` 
+                                      : `Target budget threshold limit`
+                                    }
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm sm:text-base font-bold text-neutral-900 font-mono">
+                                  ₦{item.value.toLocaleString()}
+                                </span>
+                                <span className="text-[10px] font-mono font-bold text-neutral-400 block mt-0.5">
+                                  {item.percentage}% of budget
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Exceedance alert warning banner */}
+                      {totalPlannedNGN > totalNGN && (
+                        <div className="p-4 bg-red-50 rounded-2xl border border-red-100 text-red-800 flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                          <div>
+                            <h5 className="text-sm font-bold">Planned Category Expenses Exceed Budget</h5>
+                            <p className="text-xs text-red-700/90 font-sans mt-1 leading-relaxed">
+                              Your current selections or allocations total <strong>₦{totalPlannedNGN.toLocaleString()}</strong>, which is over your target of <strong>₦{totalNGN.toLocaleString()}</strong>. Consider adjusting parameters in the Celebrations Studio.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </CardBody>
+              </Card>
+            );
+          })()
+        )}
       </div>
 
       {/* 3. Quick Actions Grid */}

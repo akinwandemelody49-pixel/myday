@@ -22,44 +22,84 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const menuItems = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: <LayoutDashboard className="w-5 h-5" />,
-      description: 'Your premium overview'
-    },
-    {
-      id: 'planner',
-      label: 'AI Planner',
-      icon: <Calendar className="w-5 h-5" />,
-      description: 'Manage your celebrations'
-    },
-    {
-      id: 'vendors',
-      label: 'Explore Vendors',
-      icon: <Store className="w-5 h-5" />,
-      description: 'Find trusted professionals'
-    },
-    {
-      id: 'payments',
-      label: 'Payment Status',
-      icon: <CreditCard className="w-5 h-5" />,
-      description: 'Track active bookings'
-    },
-    {
-      id: 'vendor-onboarding',
-      label: 'Vendor Portal',
-      icon: <Briefcase className="w-5 h-5 text-[#F4B400]" />,
-      description: 'Register as service provider'
-    },
-    {
-      id: 'business-plan',
-      label: 'Business Pitch',
-      icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
-      description: 'MyDay Business Blueprint'
+  const getMenuItems = () => {
+    const role = user.role || 'customer';
+    
+    if (role === 'admin') {
+      return [
+        {
+          id: 'admin-dashboard',
+          label: 'Admin Console',
+          icon: <LayoutDashboard className="w-5 h-5 text-[#6C4CF1]" />,
+          description: 'Platform management center'
+        },
+        {
+          id: 'business-plan',
+          label: 'Business Pitch',
+          icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
+          description: 'MyDay Business Blueprint'
+        }
+      ];
     }
-  ];
+    
+    if (role === 'vendor') {
+      return [
+        {
+          id: 'vendor-dashboard',
+          label: 'Vendor Console',
+          icon: <LayoutDashboard className="w-5 h-5 text-emerald-500" />,
+          description: 'Business & orders overview'
+        },
+        {
+          id: 'business-plan',
+          label: 'Business Pitch',
+          icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
+          description: 'MyDay Business Blueprint'
+        }
+      ];
+    }
+    
+    return [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: <LayoutDashboard className="w-5 h-5" />,
+        description: 'Your premium overview'
+      },
+      {
+        id: 'planner',
+        label: 'AI Planner',
+        icon: <Calendar className="w-5 h-5" />,
+        description: 'Manage your celebrations'
+      },
+      {
+        id: 'vendors',
+        label: 'Explore Vendors',
+        icon: <Store className="w-5 h-5" />,
+        description: 'Find trusted professionals'
+      },
+      {
+        id: 'payments',
+        label: 'Payment Status',
+        icon: <CreditCard className="w-5 h-5" />,
+        description: 'Track active bookings'
+      },
+      {
+        id: 'vendor-onboarding',
+        label: 'Vendor Portal',
+        icon: <Briefcase className="w-5 h-5 text-[#F4B400]" />,
+        description: 'Register as service provider'
+      },
+      {
+        id: 'business-plan',
+        label: 'Business Pitch',
+        icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
+        description: 'MyDay Business Blueprint'
+      }
+    ];
+  };
+
+  const menuItems = getMenuItems();
 
   const handleTabSelect = (tabId: string) => {
     setActiveTab(tabId);
@@ -162,7 +202,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </h3>
               <span className="shrink-0 inline-flex items-center gap-1 text-[9px] font-mono font-extrabold text-[#6C4CF1] bg-[#6C4CF1]/10 px-1.5 py-0.5 rounded-md uppercase">
                 <span className="w-1 h-1 rounded-full bg-[#F4B400] animate-pulse" />
-                PRO
+                {user.role || 'customer'}
               </span>
             </div>
             <p 

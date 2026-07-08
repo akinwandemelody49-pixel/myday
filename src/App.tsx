@@ -13,6 +13,8 @@ import { BusinessPlanView } from './components/views/BusinessPlanView';
 import { InvitationView } from './components/views/InvitationView';
 import { VendorOnboardingView } from './components/views/VendorOnboardingView';
 import { VendorDashboardView } from './components/views/VendorDashboardView';
+import { AdminDashboardView } from './components/views/AdminDashboardView';
+import { getUserProfile, saveUserProfile } from './services/db_services';
 import { User, BirthdayPlan, Vendor } from './types';
 import { getStoredUser, saveStoredUser, DEFAULT_MOCK_USER } from './services/auth';
 import { getLocalBirthdayPlans, saveBirthdayPlans, getFirestoreBirthdayPlans, savePlanToFirestore, deletePlanFromFirestore } from './services/db';
@@ -50,18 +52,62 @@ export default function App() {
 
   // Listen to Firebase Auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const loggedUser: User = {
+        let loggedUser: User = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
           photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=100',
           emailVerified: firebaseUser.emailVerified,
-          createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
+          createdAt: firebaseUser.metadata.creationTime || new Date().toISOString(),
+          role: 'customer' // default fallback
         };
+
+        try {
+          const profile = await getUserProfile(firebaseUser.uid);
+          if (profile) {
+            loggedUser.role = profile.role || 'customer';
+            loggedUser.displayName = profile.fullName || loggedUser.displayName;
+            if (profile.profileImage) {
+              loggedUser.photoURL = profile.profileImage;
+            }
+          } else {
+            const isEmailAdmin = firebaseUser.email?.toLowerCase() === 'akinwandemelody49@gmail.com';
+            const determinedRole = isEmailAdmin ? 'admin' : 'customer';
+            
+            await saveUserProfile(firebaseUser.uid, {
+              uid: firebaseUser.uid,
+              fullName: loggedUser.displayName || 'Anonymous User',
+              email: firebaseUser.email || '',
+              role: determinedRole
+            });
+            loggedUser.role = determinedRole;
+          }
+        } catch (e) {
+          console.error("Error setting up user profile role", e);
+        }
+
         setUser(loggedUser);
         saveStoredUser(loggedUser);
+
+        const currentLoc = window.location.pathname;
+        if (loggedUser.role === 'admin') {
+          setActiveTab('admin-dashboard');
+          if (currentLoc !== '/admin/dashboard') {
+            navigate('/admin/dashboard');
+          }
+        } else if (loggedUser.role === 'vendor') {
+          setActiveTab('vendor-dashboard');
+          if (currentLoc !== '/vendor/dashboard') {
+            navigate('/vendor/dashboard');
+          }
+        } else {
+          setActiveTab('dashboard');
+          if (currentLoc !== '/dashboard') {
+            navigate('/dashboard');
+          }
+        }
       } else {
         // If they logged out of firebase, clear the local session too
         const storedUser = getStoredUser();
@@ -74,12 +120,27 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Sync state with local storage on startup
+  // Sync state with local storage on startup and redirect
   useEffect(() => {
     const storedUser = getStoredUser();
     if (storedUser) {
       setUser(storedUser);
-      setActiveTab('dashboard');
+      if (storedUser.role === 'admin') {
+        setActiveTab('admin-dashboard');
+        if (window.location.pathname !== '/admin/dashboard') {
+          navigate('/admin/dashboard');
+        }
+      } else if (storedUser.role === 'vendor') {
+        setActiveTab('vendor-dashboard');
+        if (window.location.pathname !== '/vendor/dashboard') {
+          navigate('/vendor/dashboard');
+        }
+      } else {
+        setActiveTab('dashboard');
+        if (window.location.pathname !== '/dashboard') {
+          navigate('/dashboard');
+        }
+      }
     }
   }, []);
 
@@ -100,6 +161,10 @@ export default function App() {
     setActiveTab(tab);
     if (tab === 'home') {
       navigate('/');
+    } else if (tab === 'admin-dashboard') {
+      navigate('/admin/dashboard');
+    } else if (tab === 'vendor-dashboard') {
+      navigate('/vendor/dashboard');
     } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard' || tab === 'business-plan') {
       navigate('/dashboard');
     }
@@ -221,7 +286,8 @@ export default function App() {
   // Redirect authenticated users trying to visit guest-only auth pages
   useEffect(() => {
     if (user && ['/login', '/signup', '/forgot-password'].includes(currentPath)) {
-      navigate('/dashboard');
+      const targetPath = user.role === 'admin' ? '/admin/dashboard' : (user.role === 'vendor' ? '/vendor/dashboard' : '/dashboard');
+      navigate(targetPath);
     }
   }, [user, currentPath]);
 
@@ -543,6 +609,37 @@ export default function App() {
                   <VendorOnboardingView
                     onGoHome={() => setActiveTab('dashboard')}
                     showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'vendor-dashboard' && (
+                <motion.div
+                  key="vendor-dashboard"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <VendorDashboardView
+                    onGoHome={() => setActiveTab('dashboard')}
+                    showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'admin-dashboard' && (
+                <motion.div
+                  key="admin-dashboard"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <AdminDashboardView
+                    user={user}
+                    showNotification={showNotification}
+                    onNavigateTab={handleTabChange}
                   />
                 </motion.div>
               )}

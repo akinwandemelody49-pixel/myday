@@ -11,6 +11,7 @@ export interface User {
   photoURL: string | null;
   emailVerified: boolean;
   createdAt: string;
+  role?: 'customer' | 'vendor' | 'admin';
 }
 
 export interface ItineraryItem {

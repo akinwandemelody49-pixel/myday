@@ -79,6 +79,7 @@ export interface DBUserProfile {
   averageBudget?: number;
   createdAt: string;
   updatedAt: string;
+  role?: 'customer' | 'vendor' | 'admin';
 }
 
 export interface DBBirthdayPlan {
@@ -154,16 +155,19 @@ export const saveUserProfile = async (uid: string, profile: Partial<DBUserProfil
         updatedAt: now
       });
     } else {
+      const emailVal = profile.email || '';
+      const initialRole = emailVal.toLowerCase() === 'akinwandemelody49@gmail.com' ? 'admin' : (profile.role || 'customer');
       const fullProfile: DBUserProfile = {
         uid,
         fullName: profile.fullName || 'Anonymous User',
-        email: profile.email || '',
+        email: emailVal,
         profileImage: profile.profileImage || '',
         city: profile.city || '',
         preferredStyle: profile.preferredStyle || '',
         averageBudget: profile.averageBudget || 0,
         createdAt: now,
         updatedAt: now,
+        role: initialRole,
         ...profile
       };
       await setDoc(docRef, fullProfile);
@@ -443,5 +447,61 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
     await updateDoc(docRef, { read: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+};
+
+// -----------------------------------------------------------------------------
+// 6. System Activity Logs Collection Services
+// -----------------------------------------------------------------------------
+
+export interface DBSystemActivityLog {
+  id?: string;
+  type: 'login' | 'vendor_approved' | 'vendor_rejected' | 'user_delete' | 'user_role_update' | 'csv_export' | 'other';
+  userEmail: string;
+  userName: string;
+  details: string;
+  timestamp: string;
+  status: 'success' | 'failed';
+}
+
+export const logSystemActivity = async (activity: Omit<DBSystemActivityLog, 'id'>): Promise<string> => {
+  const path = 'systemActivityLogs';
+  try {
+    const docRef = await addDoc(collection(db, 'systemActivityLogs'), activity);
+    return docRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+    throw error;
+  }
+};
+
+export const getSystemActivityLogs = async (): Promise<DBSystemActivityLog[]> => {
+  const path = 'systemActivityLogs';
+  try {
+    const q = query(
+      collection(db, 'systemActivityLogs'),
+      orderBy('timestamp', 'desc'),
+      limit(100)
+    );
+    const querySnapshot = await getDocs(q);
+    const logs: DBSystemActivityLog[] = [];
+    querySnapshot.forEach((docSnap) => {
+      logs.push({ ...docSnap.data(), id: docSnap.id } as DBSystemActivityLog);
+    });
+    return logs;
+  } catch (error) {
+    try {
+      const fallbackQuery = query(collection(db, 'systemActivityLogs'));
+      const querySnapshot = await getDocs(fallbackQuery);
+      const logs: DBSystemActivityLog[] = [];
+      querySnapshot.forEach((docSnap) => {
+        logs.push({ ...docSnap.data(), id: docSnap.id } as DBSystemActivityLog);
+      });
+      logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      return logs;
+    } catch (fallbackError) {
+      handleFirestoreError(fallbackError, OperationType.LIST, path);
+      return [];
+    }
   }
 };

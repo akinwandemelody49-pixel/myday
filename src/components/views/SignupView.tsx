@@ -7,6 +7,7 @@ import { auth } from '../../services/firebase';
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { User } from '../../types';
 import { saveStoredUser } from '../../services/auth';
+import { saveUserProfile } from '../../services/db_services';
 
 interface SignupViewProps {
   onNavigate: (path: string) => void;
@@ -23,6 +24,7 @@ export const SignupView: React.FC<SignupViewProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<'customer' | 'vendor'>('customer');
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,19 +59,30 @@ export const SignupView: React.FC<SignupViewProps> = ({
         displayName: fullName
       });
 
+      const initialRole = email.toLowerCase() === 'akinwandemelody49@gmail.com' ? 'admin' : role;
+      await saveUserProfile(firebaseUser.uid, {
+        uid: firebaseUser.uid,
+        fullName,
+        email: firebaseUser.email || '',
+        role: initialRole
+      });
+
       const loggedUser: User = {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: fullName,
         photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?auto=format&fit=crop&q=80&w=100',
         emailVerified: firebaseUser.emailVerified,
-        createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
+        createdAt: firebaseUser.metadata.creationTime || new Date().toISOString(),
+        role: initialRole
       };
 
       saveStoredUser(loggedUser);
       onSuccess(loggedUser);
       showNotification(`Account created successfully! Welcome, ${fullName}!`);
-      onNavigate('/dashboard');
+      
+      const targetPath = initialRole === 'admin' ? '/admin/dashboard' : (initialRole === 'vendor' ? '/vendor/dashboard' : '/dashboard');
+      onNavigate(targetPath);
     } catch (err: any) {
       console.error('Sign up error', err);
       let errorMsg = 'Failed to create account. Please try again.';
@@ -247,6 +260,41 @@ export const SignupView: React.FC<SignupViewProps> = ({
                     placeholder="••••••••••••"
                     className="w-full pl-11 pr-4 py-3 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white border border-neutral-200/80 focus:border-[#6C4CF1] rounded-2xl text-sm transition-all focus:ring-1 focus:ring-[#6C4CF1] focus:outline-none placeholder-neutral-400"
                   />
+                </div>
+              </div>
+
+              {/* Role Selection Segmented Control */}
+              <div className="space-y-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                  I want to join as a:
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    id="role-customer-btn"
+                    onClick={() => setRole('customer')}
+                    className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
+                      role === 'customer'
+                        ? 'bg-[#6C4CF1]/8 border-[#6C4CF1] text-[#6C4CF1]'
+                        : 'bg-neutral-50 hover:bg-neutral-100/50 border-neutral-200 text-neutral-600'
+                    }`}
+                  >
+                    <span>🎉 Customer</span>
+                    <span className="text-[10px] font-light text-neutral-400">Plan birthday celebrations</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="role-vendor-btn"
+                    onClick={() => setRole('vendor')}
+                    className={`p-3.5 rounded-2xl border text-xs font-bold transition-all flex flex-col items-center justify-center space-y-1 cursor-pointer ${
+                      role === 'vendor'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-600'
+                        : 'bg-neutral-50 hover:bg-neutral-100/50 border-neutral-200 text-neutral-600'
+                    }`}
+                  >
+                    <span>💼 Artisan Vendor</span>
+                    <span className="text-[10px] font-light text-neutral-400">Offer premium services</span>
+                  </button>
                 </div>
               </div>
 

@@ -41,6 +41,11 @@
         "updatedAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["customer", "vendor", "admin"],
+          "description": "The user role defining application permissions and view modes"
         }
       },
       "required": ["uid", "fullName", "email"]
@@ -224,6 +229,67 @@
         }
       },
       "required": ["userId", "title", "message", "read", "createdAt"]
+    },
+    "ApprovalHistory": {
+      "title": "ApprovalHistory",
+      "description": "Represents a historical log of vendor application approval or rejection action",
+      "type": "object",
+      "properties": {
+        "applicationId": {
+          "type": "string"
+        },
+        "businessName": {
+          "type": "string"
+        },
+        "ownerName": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "enum": ["Approved", "Rejected"]
+        },
+        "adminName": {
+          "type": "string"
+        },
+        "adminEmail": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["applicationId", "businessName", "ownerName", "category", "action", "adminName", "adminEmail", "timestamp"]
+    },
+    "SystemActivityLog": {
+      "title": "SystemActivityLog",
+      "description": "Represents an audit log entry for system transactions",
+      "type": "object",
+      "properties": {
+        "userEmail": {
+          "type": "string"
+        },
+        "userName": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "details": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userEmail", "userName", "type", "details", "status", "timestamp"]
     }
   },
   "firestore": {
@@ -246,6 +312,14 @@
     "/notifications/{notificationId}": {
       "schema": "Notification",
       "description": "User informational and transaction alerts"
+    },
+    "/approvalHistory/{historyId}": {
+      "schema": "ApprovalHistory",
+      "description": "Audit trails for vendor application approvals and rejections"
+    },
+    "/systemActivityLogs/{logId}": {
+      "schema": "SystemActivityLog",
+      "description": "Audit trails of system transactions and sessions"
     }
   }
 }

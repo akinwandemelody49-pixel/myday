@@ -16,32 +16,44 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'akinwandemelody49@gmail.com';
+    }
+
     function isValidId(id) {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
     // 1. Users Collection
     match /users/{userId} {
-      allow read: if isSignedIn();
-      allow create, update: if isOwner(userId) && request.resource.data.uid == userId;
-      allow delete: if false;
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.uid == userId;
+      allow update: if isSignedIn() && (
+        isAdmin() || 
+        (isOwner(userId) && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) ||
+          request.resource.data.role == resource.data.role
+        ))
+      );
+      allow delete: if isSignedIn() && isAdmin();
     }
 
     // 2. Birthday Plans Collection (supports both camelCase and snake_case for backward compatibility)
     match /birthdayPlans/{planId} {
-      allow get: if true;
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if true;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     match /birthday_plans/{planId} {
-      allow get: if true;
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if true;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if true; // Publicly readable for shared invitations
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // 3. Vendors Collection (Publicly readable, writeable by signed-in vendors)
@@ -52,16 +64,35 @@ service cloud.firestore {
 
     // 4. Bookings Collection
     match /bookings/{bookingId} {
-      allow read, write: if isSignedIn();
+      allow get: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.vendorId == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.vendorId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.vendorId == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && isAdmin();
     }
 
     // 5. Notifications Collection
     match /notifications/{notificationId} {
-      allow get: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // 6. Vendor Applications Collection
@@ -70,6 +101,18 @@ service cloud.firestore {
       allow get: if true;
       allow list: if true; // to display submitted apps or test them in-app
       allow update, delete: if true; // so we can update / delete mock vendor application statuses during onboarding testing
+    }
+
+    // 7. Approval History Log Collection
+    match /approvalHistory/{historyId} {
+      allow read, write: if true;
+    }
+
+    // 8. System Activity Logs Collection
+    match /systemActivityLogs/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
     }
   }
 }
