@@ -14,7 +14,7 @@ import { InvitationView } from './components/views/InvitationView';
 import { VendorOnboardingView } from './components/views/VendorOnboardingView';
 import { VendorDashboardView } from './components/views/VendorDashboardView';
 import { AdminDashboardView } from './components/views/AdminDashboardView';
-import { getUserProfile, saveUserProfile } from './services/db_services';
+import { getUserProfile, saveUserProfile, logSystemActivity } from './services/db_services';
 import { User, BirthdayPlan, Vendor } from './types';
 import { getStoredUser, saveStoredUser, DEFAULT_MOCK_USER } from './services/auth';
 import { getLocalBirthdayPlans, saveBirthdayPlans, getFirestoreBirthdayPlans, savePlanToFirestore, deletePlanFromFirestore } from './services/db';
@@ -33,6 +33,25 @@ export default function App() {
   const [selectedPlanForResults, setSelectedPlanForResults] = useState<BirthdayPlan | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
+
+  // Global Theme Toggle State
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    return localStorage.getItem('myday_theme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('myday_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('myday_theme', 'light');
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => {
+    setIsDark(prev => !prev);
+  };
 
   // Handle manual history changes (back/forward browser buttons)
   useEffect(() => {
@@ -214,6 +233,15 @@ export default function App() {
     if (user) {
       try {
         await savePlanToFirestore(planWithUser);
+        // Log plan creation activity
+        await logSystemActivity({
+          type: 'plan_created',
+          userEmail: user.email || 'guest@myday.com',
+          userName: user.displayName || 'Guest User',
+          details: `Created new birthday plan "${planWithUser.themeTitle}" for ${planWithUser.celebrantName}`,
+          timestamp: new Date().toISOString(),
+          status: 'success'
+        });
       } catch (e) {
         console.error("Failed to save plan to Firestore", e);
       }
@@ -405,7 +433,7 @@ export default function App() {
 
   if (user) {
     return (
-      <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA] text-[#1A1A1A] selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] font-sans">
+      <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA] dark:bg-[#030303] text-[#1A1A1A] dark:text-[#F3F4F6] selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] font-sans transition-colors duration-300">
         
         {/* Floating Status Notification Toast */}
         <AnimatePresence>
@@ -428,6 +456,8 @@ export default function App() {
           activeTab={activeTab}
           setActiveTab={handleTabChange}
           onLogout={handleLogout}
+          isDark={isDark}
+          toggleTheme={toggleTheme}
         />
 
         {/* Workspace panel right of sidebar */}

@@ -456,7 +456,7 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
 
 export interface DBSystemActivityLog {
   id?: string;
-  type: 'login' | 'vendor_approved' | 'vendor_rejected' | 'user_delete' | 'user_role_update' | 'csv_export' | 'other';
+  type: 'login' | 'vendor_approved' | 'vendor_rejected' | 'user_delete' | 'user_role_update' | 'csv_export' | 'plan_created' | 'other';
   userEmail: string;
   userName: string;
   details: string;

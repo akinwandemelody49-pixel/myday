@@ -114,5 +114,10 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
+
+    // 9. Scheduled Exports Collection
+    match /scheduledExports/{exportId} {
+      allow read, write: if isAdmin();
+    }
   }
 }

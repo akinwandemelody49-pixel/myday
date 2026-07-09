@@ -290,6 +290,50 @@
         }
       },
       "required": ["userEmail", "userName", "type", "details", "status", "timestamp"]
+    },
+    "ScheduledExport": {
+      "title": "ScheduledExport",
+      "description": "Represents an automated, recurring data export task scheduled by an admin",
+      "type": "object",
+      "properties": {
+        "adminEmail": {
+          "type": "string",
+          "description": "The email of the admin who scheduled the automated export"
+        },
+        "targetEmail": {
+          "type": "string",
+          "description": "The destination email to send the exported records"
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["daily", "weekly", "monthly"],
+          "description": "Frequency of the automated export task"
+        },
+        "dataType": {
+          "type": "string",
+          "enum": ["users", "vendors", "both"],
+          "description": "Type of data ledger to be exported"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["csv", "json", "pdf"],
+          "description": "File format of the exported attachment"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "paused"],
+          "description": "Current state of the recurring automated task"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastTriggeredAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["adminEmail", "targetEmail", "frequency", "dataType", "format", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -320,6 +364,10 @@
     "/systemActivityLogs/{logId}": {
       "schema": "SystemActivityLog",
       "description": "Audit trails of system transactions and sessions"
+    },
+    "/scheduledExports/{exportId}": {
+      "schema": "ScheduledExport",
+      "description": "Admins' scheduled automated data export configs"
     }
   }
 }
