@@ -158,7 +158,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   ];
 
   return (
-    <div className="bg-white min-h-screen text-[#1A1A1A] overflow-x-hidden selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1]">
+    <div className="bg-white dark:bg-[#030303] min-h-screen text-[#1A1A1A] dark:text-[#E2E8F0] overflow-x-hidden selection:bg-[#6C4CF1]/10 selection:text-[#6C4CF1] transition-colors duration-300">
       
       {/* 2. Hero Section */}
       <section id="hero" className="relative pt-16 pb-24 md:py-32 px-4 md:px-8 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 overflow-visible">
@@ -172,7 +172,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 border border-[#6C4CF1]/10 text-[#6C4CF1] text-sm font-bold tracking-wide"
+            className="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 dark:bg-[#6C4CF1]/10 border border-[#6C4CF1]/10 text-[#6C4CF1] dark:text-[#8B73FF] text-sm font-bold tracking-wide"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#F4B400] animate-pulse" />
             <span className="font-sans uppercase tracking-wider text-[14px] font-extrabold">AI-Powered Birthday Studio</span>
@@ -183,7 +183,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               initial={{ opacity: 0, y: 25 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[40px] sm:text-[48px] lg:text-[56px] font-display font-extrabold tracking-tight leading-[1.1] text-[#111827]"
+              className="text-[40px] sm:text-[48px] lg:text-[56px] font-display font-extrabold tracking-tight leading-[1.1] text-[#111827] dark:text-[#FAFAFA]"
             >
               Every Birthday Deserves to Be <br />
               <span className="relative inline-block mt-2">
@@ -198,7 +198,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
-              className="font-sans text-[#374151] text-[18px] leading-[1.8] font-medium max-w-xl"
+              className="font-sans text-[#374151] dark:text-[#94A3B8] text-[18px] leading-[1.8] font-medium max-w-xl"
             >
               MyDay uses AI to design personalized birthday experiences based on your relationship, personality, budget, and celebration style. From venues and cakes to gifts and surprises, everything is planned in minutes.
             </motion.p>
@@ -225,14 +225,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setShowWatchDemo(true)}
-                className="w-full sm:w-auto text-center border border-neutral-200 hover:border-[#6C4CF1] text-neutral-800 hover:text-[#6C4CF1] px-9 py-4.5 rounded-full text-[16px] font-semibold tracking-wide transition-all duration-300 bg-white shadow-2xs hover:shadow-xs flex items-center justify-center space-x-2.5 cursor-pointer h-[56px]"
+                className="w-full sm:w-auto text-center border border-neutral-200 dark:border-neutral-800 hover:border-[#6C4CF1] dark:hover:border-[#6C4CF1] text-neutral-800 dark:text-neutral-200 hover:text-[#6C4CF1] dark:hover:text-[#6C4CF1] px-9 py-4.5 rounded-full text-[16px] font-semibold tracking-wide transition-all duration-300 bg-white dark:bg-[#0E0D16] shadow-2xs hover:shadow-xs flex items-center justify-center space-x-2.5 cursor-pointer h-[56px]"
               >
                 <span>▶ Watch Demo</span>
               </motion.button>
             </div>
  
             {/* Trust Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-4 border-t border-neutral-100 max-w-md">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-4 border-t border-neutral-100 dark:border-white/[0.04] max-w-md">
               <div className="flex items-center space-x-1 text-[#F4B400] text-sm">
                 <Star className="w-4.5 h-4.5 fill-current" />
                 <Star className="w-4.5 h-4.5 fill-current" />
@@ -240,7 +240,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <Star className="w-4.5 h-4.5 fill-current" />
                 <Star className="w-4.5 h-4.5 fill-current" />
               </div>
-              <div className="text-[14px] font-bold text-[#374151] tracking-wide">
+              <div className="text-[14px] font-bold text-[#374151] dark:text-[#94A3B8] tracking-wide">
                 Trusted by people creating unforgettable celebrations.
               </div>
             </div>
@@ -287,40 +287,40 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   ease: "easeInOut"
                 }
               }}
-              className="absolute -bottom-8 -right-4 sm:-right-8 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-2xl border border-neutral-100/80 w-72 sm:w-80 z-20"
+              className="absolute -bottom-8 -right-4 sm:-right-8 bg-white/95 dark:bg-[#0E0D16]/95 backdrop-blur-md p-5 rounded-2xl shadow-2xl border border-neutral-100/80 dark:border-white/[0.05] w-72 sm:w-80 z-20"
             >
-              <div className="flex items-center justify-between mb-4 border-b border-neutral-100 pb-3">
+              <div className="flex items-center justify-between mb-4 border-b border-neutral-100 dark:border-white/[0.04] pb-3">
                 <div className="flex items-center space-x-2">
                   <div className="w-7 h-7 rounded-lg bg-[#6C4CF1]/10 flex items-center justify-center">
                     <Cpu className="w-4 h-4 text-[#6C4CF1]" />
                   </div>
-                  <h4 className="text-xs font-bold text-neutral-800 tracking-wide">AI Celebration Plan</h4>
+                  <h4 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 tracking-wide">AI Celebration Plan</h4>
                 </div>
-                <div className="flex items-center space-x-1 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider">
+                <div className="flex items-center space-x-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Ready to Book</span>
                 </div>
               </div>
-
+ 
               <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 text-[11px]">
                 <div>
-                  <span className="text-neutral-400 font-mono text-[9px] uppercase tracking-wider">Recipient</span>
-                  <p className="font-semibold text-neutral-800 mt-0.5">Sarah</p>
+                  <span className="text-neutral-400 dark:text-neutral-500 font-mono text-[9px] uppercase tracking-wider">Recipient</span>
+                  <p className="font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">Sarah</p>
                 </div>
                 <div>
-                  <span className="text-neutral-400 font-mono text-[9px] uppercase tracking-wider">Occasion</span>
-                  <p className="font-semibold text-neutral-800 mt-0.5">Birthday</p>
+                  <span className="text-neutral-400 dark:text-neutral-500 font-mono text-[9px] uppercase tracking-wider">Occasion</span>
+                  <p className="font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">Birthday</p>
                 </div>
                 <div>
-                  <span className="text-neutral-400 font-mono text-[9px] uppercase tracking-wider">Style</span>
-                  <p className="font-semibold text-[#6C4CF1] mt-0.5 flex items-center">
+                  <span className="text-neutral-400 dark:text-neutral-500 font-mono text-[9px] uppercase tracking-wider">Style</span>
+                  <p className="font-semibold text-[#6C4CF1] dark:text-[#8B73FF] mt-0.5 flex items-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#F4B400] mr-1.5" />
                     Luxury Romantic
                   </p>
                 </div>
                 <div>
-                  <span className="text-neutral-400 font-mono text-[9px] uppercase tracking-wider">Budget</span>
-                  <p className="font-bold text-neutral-900 mt-0.5 font-mono text-xs">₦250,000</p>
+                  <span className="text-neutral-400 dark:text-neutral-500 font-mono text-[9px] uppercase tracking-wider">Budget</span>
+                  <p className="font-bold text-neutral-900 dark:text-neutral-100 mt-0.5 font-mono text-xs">₦250,000</p>
                 </div>
               </div>
             </motion.div>
@@ -417,18 +417,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </AnimatePresence>
 
       {/* 3. Trusted By Section */}
-      <section className="bg-neutral-50 border-y border-neutral-100 py-16 px-4">
+      <section className="bg-neutral-50 dark:bg-[#0E0D16]/40 border-y border-neutral-100 dark:border-white/[0.04] py-16 px-4">
         <div className="max-w-7xl mx-auto text-center space-y-8">
-          <p className="text-[14px] uppercase tracking-[0.25em] font-extrabold text-[#374151]">
+          <p className="text-[14px] uppercase tracking-[0.25em] font-extrabold text-[#374151] dark:text-[#94A3B8]">
             INTEGRATED CONCIERGE & TRUSTED CREATIVE PARTNERS
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-16 gap-y-8 opacity-80">
             {trustedPartners.map((partner, idx) => (
               <div key={idx} className="flex flex-col items-center">
-                <span className="font-serif font-extrabold text-[18px] tracking-tight text-[#111827]">
+                <span className="font-serif font-extrabold text-[18px] tracking-tight text-[#111827] dark:text-white">
                   {partner.name}
                 </span>
-                <span className="text-[11px] font-mono uppercase tracking-widest text-neutral-500 font-bold mt-1">
+                <span className="text-[11px] font-mono uppercase tracking-widest text-neutral-500 dark:text-neutral-400 font-bold mt-1">
                   {partner.role}
                 </span>
               </div>
@@ -440,13 +440,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* 4. Features Section */}
       <section id="features" className="py-28 px-4 md:px-8 max-w-7xl mx-auto scroll-mt-20">
         <div className="text-center max-w-2xl mx-auto space-y-6 mb-20">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 dark:bg-[#6C4CF1]/10 text-[#6C4CF1] dark:text-[#8B73FF] text-[14px] font-extrabold uppercase tracking-widest">
             FEATURES INDEX
           </span>
-          <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight py-2">
+          <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] dark:text-[#FAFAFA] tracking-tight py-2">
             Designed for flawless celebrations.
           </h2>
-          <p className="text-[17px] sm:text-[18px] text-[#374151] leading-[1.75] font-sans max-w-lg mx-auto">
+          <p className="text-[17px] sm:text-[18px] text-[#374151] dark:text-[#94A3B8] leading-[1.75] font-sans max-w-lg mx-auto">
             Our technology stack takes care of every architectural detail so you can remain present as the perfect host.
           </p>
         </div>
@@ -457,18 +457,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
               key={idx}
               whileHover={{ y: -5 }}
               transition={{ duration: 0.2 }}
-              className="bg-white p-10 rounded-3xl border border-neutral-100 shadow-xs hover:shadow-lg hover:border-neutral-200/50 transition-all group flex flex-col justify-between"
+              className="bg-white dark:bg-[#0E0D16] p-10 rounded-3xl border border-neutral-100 dark:border-white/[0.04] shadow-xs hover:shadow-lg hover:border-neutral-200/50 dark:hover:border-white/[0.12] transition-all group flex flex-col justify-between"
             >
               <div className="space-y-6">
-                <div className="w-14 h-14 rounded-2xl bg-[#6C4CF1]/5 flex items-center justify-center border border-[#6C4CF1]/10 group-hover:bg-[#6C4CF1] group-hover:text-white transition-colors duration-300">
+                <div className="w-14 h-14 rounded-2xl bg-[#6C4CF1]/5 dark:bg-[#6C4CF1]/10 flex items-center justify-center border border-[#6C4CF1]/10 dark:border-white/[0.06] group-hover:bg-[#6C4CF1] group-hover:text-white transition-colors duration-300">
                   <div className="group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
                   </div>
                 </div>
-                <h3 className="font-display font-extrabold text-[22px] text-[#111827]">
+                <h3 className="font-display font-extrabold text-[22px] text-[#111827] dark:text-white">
                   {feature.title}
                 </h3>
-                <p className="text-[17px] text-[#374151] leading-[1.75] font-sans font-normal">
+                <p className="text-[17px] text-[#374151] dark:text-[#94A3B8] leading-[1.75] font-sans font-normal">
                   {feature.desc}
                 </p>
               </div>
@@ -476,38 +476,38 @@ export const HomeView: React.FC<HomeViewProps> = ({
           ))}
         </div>
       </section>
-
+ 
       {/* 5. How It Works Section */}
-      <section id="how-it-works" className="bg-[#6C4CF1]/5 py-28 px-4 md:px-8 border-y border-[#6C4CF1]/10 scroll-mt-20">
+      <section id="how-it-works" className="bg-[#6C4CF1]/5 dark:bg-[#6C4CF1]/10 py-28 px-4 md:px-8 border-y border-[#6C4CF1]/10 dark:border-white/[0.04] scroll-mt-20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto space-y-6 mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/10 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/10 dark:bg-[#6C4CF1]/20 text-[#6C4CF1] dark:text-[#8B73FF] text-[14px] font-extrabold uppercase tracking-widest">
               STEP-BY-STEP ORCHESTRATION
             </span>
-            <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight py-2">
+            <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] dark:text-[#FAFAFA] tracking-tight py-2">
               An elegant planning sequence.
             </h2>
-            <p className="text-[17px] text-[#374151] max-w-md mx-auto font-sans leading-[1.75]">
+            <p className="text-[17px] text-[#374151] dark:text-[#94A3B8] max-w-md mx-auto font-sans leading-[1.75]">
               Go from zero concept draft to locked-in booking in less than five minutes.
             </p>
           </div>
-
+ 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 relative">
             {steps.map((step, idx) => (
-              <div key={idx} className="relative bg-white p-10 rounded-3xl border border-neutral-100 shadow-xs flex flex-col justify-between">
+              <div key={idx} className="relative bg-white dark:bg-[#0E0D16] p-10 rounded-3xl border border-neutral-100 dark:border-white/[0.04] shadow-xs flex flex-col justify-between">
                 {/* Connecting lines for large screens */}
                 {idx < 2 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-5 w-10 h-[1px] bg-neutral-200 z-10" />
+                  <div className="hidden lg:block absolute top-1/2 -right-5 w-10 h-[1px] bg-neutral-200 dark:bg-neutral-800/80 z-10" />
                 )}
                 
                 <div className="space-y-5">
                   <span className="font-mono text-[14px] font-extrabold text-[#F4B400] uppercase tracking-widest">
                     {step.step}
                   </span>
-                  <h3 className="font-display font-extrabold text-[22px] text-[#111827]">
+                  <h3 className="font-display font-extrabold text-[22px] text-[#111827] dark:text-white">
                     {step.title}
                   </h3>
-                  <p className="text-[17px] text-[#374151] leading-[1.75] font-sans font-normal">
+                  <p className="text-[17px] text-[#374151] dark:text-[#94A3B8] leading-[1.75] font-sans font-normal">
                     {step.desc}
                   </p>
                 </div>
@@ -521,13 +521,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <section className="py-28 px-4 md:px-8 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="space-y-4 text-left">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 dark:bg-[#6C4CF1]/10 text-[#6C4CF1] dark:text-[#8B73FF] text-[14px] font-extrabold uppercase tracking-widest">
               DESIGN ARCHETYPES
             </span>
-            <h3 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight">
+            <h3 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] dark:text-white tracking-tight">
               Begin with curated inspiration.
             </h3>
-            <p className="text-[17px] text-[#374151] font-sans leading-[1.75]">
+            <p className="text-[17px] text-[#374151] dark:text-[#94A3B8] font-sans leading-[1.75]">
               Select an aesthetic archetype to instantiate a customizable timeline layout immediately.
             </p>
           </div>
@@ -536,7 +536,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             size="md" 
             onClick={onStartPlanning} 
             rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="hover:border-[#6C4CF1] hover:text-[#6C4CF1] self-start md:self-auto shrink-0 font-semibold"
+            className="hover:border-[#6C4CF1] dark:hover:border-[#6C4CF1] hover:text-[#6C4CF1] dark:hover:text-[#8B73FF] dark:text-neutral-300 dark:border-neutral-800 self-start md:self-auto shrink-0 font-semibold"
           >
             Interactive Studio
           </Button>
@@ -548,7 +548,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               key={index}
               hoverEffect
               onClick={() => onSelectQuickTheme(item.vibe)}
-              className="rounded-3xl border border-neutral-100 overflow-hidden cursor-pointer group hover:border-[#6C4CF1]/20 transition-all shadow-xs hover:shadow-lg"
+              className="rounded-3xl border border-neutral-100 dark:border-white/[0.04] bg-white dark:bg-[#0E0D16] overflow-hidden cursor-pointer group hover:border-[#6C4CF1]/20 dark:hover:border-[#6C4CF1]/40 transition-all shadow-xs hover:shadow-lg"
             >
               <div className="relative h-64 overflow-hidden">
                 <img
@@ -565,12 +565,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </span>
               </div>
               <CardBody className="p-8 text-left">
-                <h4 className="font-display font-bold text-[22px] text-[#111827] mb-3 group-hover:text-[#6C4CF1] transition-colors">
+                <h4 className="font-display font-bold text-[22px] text-[#111827] dark:text-white mb-3 group-hover:text-[#6C4CF1] dark:group-hover:text-[#8B73FF] transition-colors">
                   {item.title}
                 </h4>
                 <div className="flex items-center justify-between mt-6">
-                  <span className="text-[12px] text-neutral-400 font-mono tracking-wider font-bold">PLAN ARCHETYPE</span>
-                  <span className="text-[16px] text-[#6C4CF1] font-bold flex items-center">
+                  <span className="text-[12px] text-neutral-400 dark:text-neutral-500 font-mono tracking-wider font-bold">PLAN ARCHETYPE</span>
+                  <span className="text-[16px] text-[#6C4CF1] dark:text-[#8B73FF] font-bold flex items-center">
                     Select Draft <Compass className="w-4 h-4 ml-1.5" />
                   </span>
                 </div>
@@ -581,40 +581,40 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* 6. Testimonials Section */}
-      <section className="bg-neutral-50 border-y border-neutral-100 py-28 px-4 md:px-8">
+      <section className="bg-neutral-50 dark:bg-[#0E0D16]/40 border-y border-neutral-100 dark:border-white/[0.04] py-28 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto space-y-6 mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 dark:bg-[#6C4CF1]/10 text-[#6C4CF1] dark:text-[#8B73FF] text-[14px] font-extrabold uppercase tracking-widest">
               CELEBRANT TESTIMONIALS
             </span>
-            <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight py-2">
+            <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] dark:text-white tracking-tight py-2">
               Rave reviews from elegant hosts.
             </h2>
-            <p className="text-[17px] text-[#374151] font-sans leading-[1.75] max-w-sm mx-auto">
+            <p className="text-[17px] text-[#374151] dark:text-[#94A3B8] font-sans leading-[1.75] max-w-sm mx-auto">
               Read how our digital planning concierge orchestrates memorable physical experiences.
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {testimonials.map((testimonial, idx) => (
-              <div key={idx} className="bg-white p-10 rounded-3xl border border-neutral-100 shadow-2xs flex flex-col justify-between space-y-8">
+              <div key={idx} className="bg-white dark:bg-[#0E0D16] p-10 rounded-3xl border border-neutral-100 dark:border-white/[0.04] shadow-2xs flex flex-col justify-between space-y-8">
                 <div className="space-y-5">
                   <Quote className="w-10 h-10 text-[#6C4CF1] opacity-25" />
-                  <p className="text-[17px] text-[#374151] leading-[1.75] font-sans italic font-normal">
+                  <p className="text-[17px] text-[#374151] dark:text-neutral-300 leading-[1.75] font-sans italic font-normal">
                     "{testimonial.quote}"
                   </p>
                 </div>
 
-                <div className="flex items-center space-x-4 pt-6 border-t border-neutral-50">
+                <div className="flex items-center space-x-4 pt-6 border-t border-neutral-50 dark:border-white/[0.03]">
                   <img
                      src={testimonial.img}
                      alt={testimonial.name}
-                     className="w-12 h-12 rounded-full object-cover border border-neutral-100"
+                     className="w-12 h-12 rounded-full object-cover border border-neutral-100 dark:border-white/[0.05]"
                      referrerPolicy="no-referrer"
                   />
                   <div>
-                    <h4 className="text-[16px] font-bold text-[#111827] font-sans">{testimonial.name}</h4>
-                    <p className="text-[12px] text-[#374151] font-mono font-bold uppercase tracking-wider mt-0.5">{testimonial.role}</p>
+                    <h4 className="text-[16px] font-bold text-[#111827] dark:text-neutral-100 font-sans">{testimonial.name}</h4>
+                    <p className="text-[12px] text-[#374151] dark:text-neutral-400 font-mono font-bold uppercase tracking-wider mt-0.5">{testimonial.role}</p>
                   </div>
                 </div>
               </div>
@@ -626,13 +626,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* 7. FAQ Section */}
       <section id="faq" className="py-28 px-4 md:px-8 max-w-4xl mx-auto scroll-mt-20">
         <div className="text-center space-y-6 mb-20">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 text-[#6C4CF1] text-[14px] font-extrabold uppercase tracking-widest">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#6C4CF1]/5 dark:bg-[#6C4CF1]/10 text-[#6C4CF1] dark:text-[#8B73FF] text-[14px] font-extrabold uppercase tracking-widest">
             FAQ SEGMENT
           </span>
-          <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] tracking-tight py-2">
+          <h2 className="text-[28px] sm:text-[32px] font-display font-extrabold text-[#111827] dark:text-white tracking-tight py-2">
             Frequently asked questions.
           </h2>
-          <p className="text-[17px] text-[#374151] font-sans leading-[1.75]">
+          <p className="text-[17px] text-[#374151] dark:text-[#94A3B8] font-sans leading-[1.75]">
             Clear information about our automated planning system.
           </p>
         </div>
@@ -641,13 +641,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {faqs.map((faq, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-2xl border border-neutral-100 overflow-hidden transition-all duration-300"
+              className="bg-white dark:bg-[#0E0D16] rounded-2xl border border-neutral-100 dark:border-white/[0.04] overflow-hidden transition-all duration-300"
             >
               <button
                 onClick={() => toggleFaq(idx)}
-                className="w-full flex items-center justify-between p-8 text-left cursor-pointer hover:bg-neutral-50/55 transition-colors"
+                className="w-full flex items-center justify-between p-8 text-left cursor-pointer hover:bg-neutral-50/55 dark:hover:bg-neutral-900/30 transition-colors"
               >
-                <span className="font-display font-bold text-[16px] sm:text-[18px] text-[#111827]">
+                <span className="font-display font-bold text-[16px] sm:text-[18px] text-[#111827] dark:text-neutral-100">
                   {faq.q}
                 </span>
                 {openFaq === idx ? (
@@ -658,7 +658,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </button>
 
               {openFaq === idx && (
-                <div className="px-8 pb-8 pt-4 text-[17px] text-[#374151] leading-[1.75] font-sans border-t border-neutral-100 bg-neutral-50/20">
+                <div className="px-8 pb-8 pt-4 text-[17px] text-[#374151] dark:text-[#94A3B8] leading-[1.75] font-sans border-t border-neutral-100 dark:border-white/[0.04] bg-neutral-50/20 dark:bg-neutral-950/20">
                   {faq.a}
                 </div>
               )}

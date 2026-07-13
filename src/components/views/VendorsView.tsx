@@ -107,10 +107,10 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
       subtitle="HANDPICKED EXCELLENCE"
       description="Connect directly with curated local artists, bakers, musicians, and spaces vetted to align with our high hospitality benchmarks."
       badge="Signature Directory"
-      className="bg-white"
+      className="bg-white dark:bg-[#030303]"
     >
       {/* Search & Filters block */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 bg-neutral-50 dark:bg-neutral-900/40 p-4 rounded-2xl border border-neutral-100 dark:border-neutral-800">
         {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -119,24 +119,24 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
             placeholder="Search venue names, catering chefs, florists..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-neutral-200 focus:border-gold-400 px-12 h-[52px] rounded-xl text-[16px] md:text-[17px] outline-none transition-colors placeholder:text-neutral-400 font-normal"
+            className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 focus:border-gold-400 px-12 h-[52px] rounded-xl text-[16px] md:text-[17px] text-neutral-800 dark:text-neutral-100 outline-none transition-colors placeholder:text-neutral-400 font-normal"
           />
         </div>
 
         {/* Filters */}
         <div className="flex items-center space-x-3">
           {/* Price dropdown */}
-          <div className="relative flex items-center space-x-2 bg-white border border-neutral-200 rounded-xl px-4 h-[52px] text-[15px] sm:text-[16px]">
+          <div className="relative flex items-center space-x-2 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 h-[52px] text-[15px] sm:text-[16px]">
             <Filter className="w-4 h-4 text-neutral-400" />
             <select
               value={priceFilter}
               onChange={(e) => setPriceFilter(e.target.value)}
-              className="bg-transparent outline-none cursor-pointer text-neutral-700 font-bold"
+              className="bg-transparent outline-none cursor-pointer text-neutral-700 dark:text-neutral-200 font-bold"
             >
-              <option value="all">Price Range (All)</option>
-              <option value="medium">Medium ($$)</option>
-              <option value="high">Premium ($$$)</option>
-              <option value="luxury">Luxury ($$$$)</option>
+              <option value="all" className="bg-white dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200">Price Range (All)</option>
+              <option value="medium" className="bg-white dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200">Medium ($$)</option>
+              <option value="high" className="bg-white dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200">Premium ($$$)</option>
+              <option value="luxury" className="bg-white dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200">Luxury ($$$$)</option>
             </select>
           </div>
         </div>
@@ -150,8 +150,8 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
             onClick={() => setSelectedCategory(cat)}
             className={`px-6 py-3 rounded-full text-[14px] sm:text-[15px] font-display tracking-wide uppercase font-bold transition-all duration-300 cursor-pointer ${
               selectedCategory === cat
-                ? 'bg-[#6C4CF1] text-white border border-transparent shadow-xs'
-                : 'bg-neutral-50 text-neutral-500 border border-neutral-100 hover:bg-neutral-100'
+                ? 'bg-[#6C4CF1] dark:bg-[#8B73FF] text-white border border-transparent shadow-xs'
+                : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 border border-neutral-100 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800'
             }`}
           >
             {cat === 'all' ? 'All Network' : cat}
@@ -168,14 +168,14 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {filteredVendors.map((vendor) => (
             <Card key={vendor.id} hoverEffect onClick={() => setActiveModalVendor(vendor)} variant="luxury">
-              <div className="relative h-56 overflow-hidden bg-neutral-100">
+              <div className="relative h-56 overflow-hidden bg-neutral-100 dark:bg-neutral-900">
                 <img
                   src={vendor.imageUrl}
                   alt={vendor.name}
                   className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
                   referrerPolicy="no-referrer"
                 />
-                <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 text-[10px] uppercase font-mono tracking-wider font-semibold rounded-md shadow-xs text-neutral-800 border border-neutral-100/30">
+                <span className="absolute top-4 left-4 bg-white/90 dark:bg-neutral-950/90 backdrop-blur-md px-3 py-1 text-[10px] uppercase font-mono tracking-wider font-semibold rounded-md shadow-xs text-neutral-800 dark:text-neutral-200 border border-neutral-100/30 dark:border-neutral-800/30">
                   {vendor.category}
                 </span>
                 <span className="absolute bottom-4 right-4 bg-neutral-950 px-2.5 py-0.5 text-xs font-bold text-gold-300 rounded-md">
@@ -184,27 +184,27 @@ export const VendorsView: React.FC<VendorsViewProps> = ({
               </div>
               <CardBody className="p-8 space-y-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-display font-bold text-[20px] sm:text-[22px] text-[#111827] line-clamp-1 group-hover:text-gold-600 transition-colors">
+                  <h3 className="font-display font-bold text-[20px] sm:text-[22px] text-[#111827] dark:text-neutral-50 line-clamp-1 group-hover:text-gold-600 transition-colors">
                     {vendor.name}
                   </h3>
-                  <div className="flex items-center text-[15px] font-bold text-gold-600 space-x-1.5 shrink-0">
+                  <div className="flex items-center text-[15px] font-bold text-gold-600 dark:text-gold-400 space-x-1.5 shrink-0">
                     <Star className="w-4.5 h-4.5 fill-gold-500 stroke-gold-500" />
                     <span>{vendor.rating}</span>
                   </div>
                 </div>
 
-                <p className="text-[17px] font-sans text-[#374151] line-clamp-2 leading-[1.7] font-normal">
+                <p className="text-[17px] font-sans text-[#374151] dark:text-neutral-300 line-clamp-2 leading-[1.7] font-normal">
                   {vendor.description}
                 </p>
 
-                <div className="flex items-center text-[14px] sm:text-[15px] text-[#374151] font-sans space-x-1.5 font-medium">
+                <div className="flex items-center text-[14px] sm:text-[15px] text-[#374151] dark:text-neutral-300 font-sans space-x-1.5 font-medium">
                   <MapPin className="w-4 h-4 text-neutral-400 shrink-0" />
                   <span className="truncate">{vendor.location}</span>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-neutral-100 pt-5 text-[15px] sm:text-[16px] font-display">
-                  <span className="text-neutral-400 font-mono font-bold tracking-wider text-[12px]">CONCIERGE VETTED</span>
-                  <span className="text-gold-600 font-bold flex items-center group-hover:underline">
+                <div className="flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-5 text-[15px] sm:text-[16px] font-display">
+                  <span className="text-neutral-400 dark:text-neutral-500 font-mono font-bold tracking-wider text-[12px]">VETTED PARTNER</span>
+                  <span className="text-gold-600 dark:text-gold-400 font-bold flex items-center group-hover:underline">
                     View Portfolio <ArrowUpRight className="w-4 h-4 ml-1" />
                   </span>
                 </div>

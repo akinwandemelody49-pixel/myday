@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { Card, CardBody } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { db } from '../../services/firebase';
+import { db, auth } from '../../services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { 
   collection, doc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, orderBy, limit
 } from 'firebase/firestore';
@@ -997,28 +998,40 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     setIsLoading(true);
     try {
       // 1. Fetch Users
-      const usersSnap = await getDocs(collection(db, 'users'));
-      const fetchedUsers: DBUserProfile[] = [];
-      usersSnap.forEach((d) => {
-        fetchedUsers.push({ id: d.id, ...d.data() } as any);
-      });
-      setUsers(fetchedUsers);
+      try {
+        const usersSnap = await getDocs(collection(db, 'users'));
+        const fetchedUsers: DBUserProfile[] = [];
+        usersSnap.forEach((d) => {
+          fetchedUsers.push({ id: d.id, ...d.data() } as any);
+        });
+        setUsers(fetchedUsers);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'users');
+      }
 
       // 2. Fetch Vendors
-      const vendorsSnap = await getDocs(collection(db, 'vendors'));
-      const fetchedVendors: DBVendor[] = [];
-      vendorsSnap.forEach((d) => {
-        fetchedVendors.push({ id: d.id, ...d.data() } as any);
-      });
-      setVendors(fetchedVendors);
+      try {
+        const vendorsSnap = await getDocs(collection(db, 'vendors'));
+        const fetchedVendors: DBVendor[] = [];
+        vendorsSnap.forEach((d) => {
+          fetchedVendors.push({ id: d.id, ...d.data() } as any);
+        });
+        setVendors(fetchedVendors);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'vendors');
+      }
 
       // 3. Fetch Bookings
-      const bookingsSnap = await getDocs(collection(db, 'bookings'));
-      const fetchedBookings: DBBooking[] = [];
-      bookingsSnap.forEach((d) => {
-        fetchedBookings.push({ id: d.id, ...d.data() } as any);
-      });
-      setBookings(fetchedBookings);
+      try {
+        const bookingsSnap = await getDocs(collection(db, 'bookings'));
+        const fetchedBookings: DBBooking[] = [];
+        bookingsSnap.forEach((d) => {
+          fetchedBookings.push({ id: d.id, ...d.data() } as any);
+        });
+        setBookings(fetchedBookings);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'bookings');
+      }
 
       // 3.5. Fetch Birthday Plans
       let fetchedPlans: any[] = [];
@@ -1035,7 +1048,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             fetchedPlans.push({ id: doc.id, ...doc.data() });
           });
         } catch (err2) {
-          console.error('Error fetching birthdayPlans as well', err2);
+          handleFirestoreError(err2, OperationType.LIST, 'birthdayPlans');
         }
       }
       setBirthdayPlans(fetchedPlans);
@@ -1046,20 +1059,24 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       setApplications(apps);
 
       // 5. Fetch Approval History
-      const historySnap = await getDocs(collection(db, 'approvalHistory'));
-      const fetchedHistory: ApprovalHistoryLog[] = [];
-      historySnap.forEach((d) => {
-        fetchedHistory.push({ id: d.id, ...d.data() } as any);
-      });
-      fetchedHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setApprovalHistory(fetchedHistory);
+      try {
+        const historySnap = await getDocs(collection(db, 'approvalHistory'));
+        const fetchedHistory: ApprovalHistoryLog[] = [];
+        historySnap.forEach((d) => {
+          fetchedHistory.push({ id: d.id, ...d.data() } as any);
+        });
+        fetchedHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        setApprovalHistory(fetchedHistory);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'approvalHistory');
+      }
 
       // 6. Fetch System Activity Logs
       try {
         const fetchedLogs = await getSystemActivityLogs();
         setActivityLogs(fetchedLogs);
       } catch (logErr) {
-        console.error('Failed to load system activity logs', logErr);
+        handleFirestoreError(logErr, OperationType.LIST, 'systemActivityLogs');
       }
 
       // 7. Fetch Scheduled Exports
@@ -1071,7 +1088,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         });
         setScheduledExports(fetchedSched);
       } catch (schedErr) {
-        console.error('Failed to load scheduled exports', schedErr);
+        handleFirestoreError(schedErr, OperationType.LIST, 'scheduledExports');
       }
 
     } catch (err) {
@@ -1083,7 +1100,12 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   };
 
   useEffect(() => {
-    fetchAllAdminData();
+    // Wait for auth to resolve before fetching admin data to prevent permissions issues during initialization
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        fetchAllAdminData();
+      }
+    });
 
     // Set up real-time listener for system activity logs
     const q = query(
@@ -1091,7 +1113,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       orderBy('timestamp', 'desc'),
       limit(100)
     );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeLogs = onSnapshot(q, (snapshot) => {
       const logs: DBSystemActivityLog[] = [];
       snapshot.forEach((docSnap) => {
         logs.push({ ...docSnap.data(), id: docSnap.id } as DBSystemActivityLog);
@@ -1101,7 +1123,10 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       console.warn("Real-time system logs listener fallback/error:", error);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      unsubscribeLogs();
+    };
   }, []);
 
   // Approve a Vendor Application

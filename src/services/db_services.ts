@@ -44,9 +44,24 @@ export interface FirestoreErrorInfo {
   };
 }
 
+export function isOfflineError(error: unknown): boolean {
+  if (!error) return false;
+  const errMsg = error instanceof Error ? error.message : String(error);
+  const errCode = (error as any)?.code;
+  return (
+    errMsg.toLowerCase().includes('offline') ||
+    errMsg.toLowerCase().includes('unreachable') ||
+    errMsg.toLowerCase().includes('could not reach cloud firestore backend') ||
+    errCode === 'unavailable' ||
+    errCode === 'failed-precondition'
+  );
+}
+
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errMsg = error instanceof Error ? error.message : String(error);
+  
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMsg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -61,6 +76,12 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
+
+  if (isOfflineError(error)) {
+    console.warn('Firestore operating in offline/cached fallback mode:', errMsg);
+    return;
+  }
+
   console.error('Firestore Error Context:', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
@@ -145,11 +166,26 @@ export interface DBNotification {
 export const saveUserProfile = async (uid: string, profile: Partial<DBUserProfile>): Promise<void> => {
   const path = `users/${uid}`;
   try {
+    // Cache locally first so offline reads are immediately populated with latest data
+    try {
+      const cached = localStorage.getItem(`myday_profile_${uid}`);
+      const existing = cached ? JSON.parse(cached) : {};
+      const updated = {
+        ...existing,
+        ...profile,
+        uid,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(`myday_profile_${uid}`, JSON.stringify(updated));
+    } catch (cacheErr) {
+      console.warn('Could not cache profile update locally:', cacheErr);
+    }
+
     const docRef = doc(db, 'users', uid);
-    const existing = await getDoc(docRef);
+    const existingSnap = await getDoc(docRef);
     const now = new Date().toISOString();
     
-    if (existing.exists()) {
+    if (existingSnap.exists()) {
       await updateDoc(docRef, {
         ...profile,
         updatedAt: now
@@ -173,6 +209,10 @@ export const saveUserProfile = async (uid: string, profile: Partial<DBUserProfil
       await setDoc(docRef, fullProfile);
     }
   } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore is offline, saved profile update to local cache only for uid:', uid);
+      return;
+    }
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 };
@@ -183,10 +223,44 @@ export const getUserProfile = async (uid: string): Promise<DBUserProfile | null>
     const docRef = doc(db, 'users', uid);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      return docSnap.data() as DBUserProfile;
+      const data = docSnap.data() as DBUserProfile;
+      try {
+        localStorage.setItem(`myday_profile_${uid}`, JSON.stringify(data));
+      } catch (cacheErr) {
+        console.warn('Could not cache profile locally:', cacheErr);
+      }
+      return data;
     }
     return null;
   } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore is offline, loading user profile from local cache for uid:', uid);
+      try {
+        const cached = localStorage.getItem(`myday_profile_${uid}`);
+        if (cached) {
+          return JSON.parse(cached) as DBUserProfile;
+        }
+      } catch (cacheErr) {
+        console.warn('Error reading cached profile:', cacheErr);
+      }
+      
+      // Return fallback structured default profile to prevent system crashes
+      const isEmailAdmin = auth.currentUser?.email?.toLowerCase() === 'akinwandemelody49@gmail.com';
+      const fallbackProfile: DBUserProfile = {
+        uid,
+        fullName: auth.currentUser?.displayName || 'User',
+        email: auth.currentUser?.email || '',
+        profileImage: auth.currentUser?.photoURL || '',
+        city: 'Lagos, Nigeria',
+        preferredStyle: 'elegant',
+        averageBudget: 1800,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        role: isEmailAdmin ? 'admin' : 'customer'
+      };
+      return fallbackProfile;
+    }
+
     handleFirestoreError(error, OperationType.GET, path);
     return null;
   }
@@ -199,12 +273,34 @@ export const getUserProfile = async (uid: string): Promise<DBUserProfile | null>
 export const saveBirthdayPlan = async (plan: DBBirthdayPlan): Promise<string> => {
   const planId = plan.id || doc(collection(db, 'birthdayPlans')).id;
   const path = `birthdayPlans/${planId}`;
+  
+  // Cache locally first
+  try {
+    const cachedPlansStr = localStorage.getItem('myday_birthday_plans') || '[]';
+    let cachedPlans: DBBirthdayPlan[] = JSON.parse(cachedPlansStr);
+    if (!Array.isArray(cachedPlans)) cachedPlans = [];
+    const existingIndex = cachedPlans.findIndex(p => p.id === planId);
+    const updatedPlan = { ...plan, id: planId };
+    if (existingIndex >= 0) {
+      cachedPlans[existingIndex] = updatedPlan;
+    } else {
+      cachedPlans.push(updatedPlan);
+    }
+    localStorage.setItem('myday_birthday_plans', JSON.stringify(cachedPlans));
+  } catch (e) {
+    console.warn('Failed to cache plan locally:', e);
+  }
+
   try {
     const docRef = doc(db, 'birthdayPlans', planId);
     const dataToSave = { ...plan, id: planId };
     await setDoc(docRef, dataToSave);
     return planId;
   } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore is offline, birthday plan saved to local cache only.');
+      return planId;
+    }
     handleFirestoreError(error, OperationType.WRITE, path);
     throw error;
   }
@@ -223,8 +319,38 @@ export const getBirthdayPlans = async (userId: string): Promise<DBBirthdayPlan[]
     querySnapshot.forEach((docSnap) => {
       plans.push(docSnap.data() as DBBirthdayPlan);
     });
+
+    // Sync to local cache
+    try {
+      const cachedPlansStr = localStorage.getItem('myday_birthday_plans') || '[]';
+      let cachedPlans: DBBirthdayPlan[] = JSON.parse(cachedPlansStr);
+      if (!Array.isArray(cachedPlans)) cachedPlans = [];
+      
+      const otherUsersPlans = cachedPlans.filter(p => p.userId !== userId);
+      const mergedPlans = [...otherUsersPlans, ...plans];
+      localStorage.setItem('myday_birthday_plans', JSON.stringify(mergedPlans));
+    } catch (e) {
+      console.warn('Failed to sync plans to local cache:', e);
+    }
+
     return plans;
   } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore is offline, loading birthday plans from local cache for userId:', userId);
+      try {
+        const cachedPlansStr = localStorage.getItem('myday_birthday_plans');
+        if (cachedPlansStr) {
+          const cachedPlans = JSON.parse(cachedPlansStr);
+          if (Array.isArray(cachedPlans)) {
+            return cachedPlans.filter(p => p.userId === userId) as DBBirthdayPlan[];
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to read plans from local cache:', e);
+      }
+      return [];
+    }
+
     // If standard query fails (e.g. index build required), fall back to non-ordered filter
     try {
       const fallbackQuery = query(collection(db, 'birthdayPlans'), where('userId', '==', userId));
@@ -235,6 +361,21 @@ export const getBirthdayPlans = async (userId: string): Promise<DBBirthdayPlan[]
       });
       return plans;
     } catch (fallbackError) {
+      if (isOfflineError(fallbackError)) {
+        console.warn('Firestore offline during fallback query, loading from local cache for userId:', userId);
+        try {
+          const cachedPlansStr = localStorage.getItem('myday_birthday_plans');
+          if (cachedPlansStr) {
+            const cachedPlans = JSON.parse(cachedPlansStr);
+            if (Array.isArray(cachedPlans)) {
+              return cachedPlans.filter(p => p.userId === userId) as DBBirthdayPlan[];
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to read plans from local cache during fallback:', e);
+        }
+        return [];
+      }
       handleFirestoreError(fallbackError, OperationType.LIST, path);
       return [];
     }
@@ -243,10 +384,29 @@ export const getBirthdayPlans = async (userId: string): Promise<DBBirthdayPlan[]
 
 export const deleteBirthdayPlan = async (planId: string): Promise<void> => {
   const path = `birthdayPlans/${planId}`;
+  
+  // Update local cache
+  try {
+    const cachedPlansStr = localStorage.getItem('myday_birthday_plans');
+    if (cachedPlansStr) {
+      const cachedPlans = JSON.parse(cachedPlansStr);
+      if (Array.isArray(cachedPlans)) {
+        const filtered = cachedPlans.filter(p => p.id !== planId);
+        localStorage.setItem('myday_birthday_plans', JSON.stringify(filtered));
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to delete plan from local cache:', e);
+  }
+
   try {
     const docRef = doc(db, 'birthdayPlans', planId);
     await deleteDoc(docRef);
   } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore is offline, deleted birthday plan from local cache only.');
+      return;
+    }
     handleFirestoreError(error, OperationType.DELETE, path);
   }
 };

@@ -39,7 +39,7 @@ export const SectionContainer: React.FC<SectionContainerProps> = ({
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
             <div className="max-w-3xl">
               {badge && (
-                <span className="inline-block px-4 py-1.5 text-[12px] uppercase tracking-widest font-mono font-bold text-gold-600 bg-gold-50 border border-gold-200/50 rounded-full mb-4">
+                <span className="inline-block px-4 py-1.5 text-[12px] uppercase tracking-widest font-mono font-bold text-gold-600 dark:text-gold-400 bg-gold-50 dark:bg-gold-950/20 border border-gold-200/50 dark:border-gold-800/40 rounded-full mb-4">
                   {badge}
                 </span>
               )}
@@ -49,12 +49,12 @@ export const SectionContainer: React.FC<SectionContainerProps> = ({
                 </h4>
               )}
               {title && (
-                <h2 className="font-display font-extrabold text-[32px] sm:text-[38px] text-[#111827] tracking-tight leading-tight pb-1">
+                <h2 className="font-display font-extrabold text-[32px] sm:text-[38px] text-[#111827] dark:text-neutral-50 tracking-tight leading-tight pb-1">
                   {title}
                 </h2>
               )}
               {description && (
-                <p className="mt-4 font-sans text-[#374151] leading-[1.7] text-[17px] md:text-[18px] font-normal">
+                <p className="mt-4 font-sans text-[#374151] dark:text-neutral-300 leading-[1.7] text-[17px] md:text-[18px] font-normal">
                   {description}
                 </p>
               )}

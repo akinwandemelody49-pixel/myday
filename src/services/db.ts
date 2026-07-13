@@ -154,7 +154,8 @@ export const SAMPLE_VENDORS: Vendor[] = [
 const STORAGE_KEY = 'myday_birthday_plans';
 
 import { collection, query, where, getDocs, setDoc, doc, deleteDoc, getDocFromServer, getDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
+import { handleFirestoreError, OperationType } from './db_services';
 
 // Validate Connection to Firestore as per the Firebase Integration Skill guidelines
 async function testConnection() {
@@ -181,7 +182,7 @@ export const getFirestoreBirthdayPlan = async (planId: string): Promise<Birthday
     }
     return null;
   } catch (e) {
-    console.error('Error reading single plan from Firestore', e);
+    handleFirestoreError(e, OperationType.GET, `birthday_plans/${planId}`);
     return null;
   }
 };
@@ -189,7 +190,8 @@ export const getFirestoreBirthdayPlan = async (planId: string): Promise<Birthday
 // Fetch plans from Firestore for the specific user
 export const getFirestoreBirthdayPlans = async (userId: string): Promise<BirthdayPlan[]> => {
   try {
-    const q = query(collection(db, 'birthday_plans'), where('userId', '==', userId));
+    const actualUid = auth.currentUser?.uid || userId;
+    const q = query(collection(db, 'birthday_plans'), where('userId', '==', actualUid));
     const querySnapshot = await getDocs(q);
     const plans: BirthdayPlan[] = [];
     querySnapshot.forEach((docSnap) => {
@@ -197,7 +199,7 @@ export const getFirestoreBirthdayPlans = async (userId: string): Promise<Birthda
     });
     return plans;
   } catch (e) {
-    console.error('Error reading from Firestore', e);
+    handleFirestoreError(e, OperationType.LIST, 'birthday_plans');
     throw e;
   }
 };
@@ -205,11 +207,13 @@ export const getFirestoreBirthdayPlans = async (userId: string): Promise<Birthda
 // Save a single plan to Firestore
 export const savePlanToFirestore = async (plan: BirthdayPlan): Promise<void> => {
   try {
-    const docRef = doc(db, 'birthday_plans', plan.id);
-    await setDoc(docRef, plan);
-    console.log(`Plan ${plan.id} saved to Firestore`);
+    const activeUid = auth.currentUser?.uid || plan.userId;
+    const planToSave = { ...plan, userId: activeUid };
+    const docRef = doc(db, 'birthday_plans', planToSave.id);
+    await setDoc(docRef, planToSave);
+    console.log(`Plan ${planToSave.id} saved to Firestore with userId: ${activeUid}`);
   } catch (e) {
-    console.error('Error saving to Firestore', e);
+    handleFirestoreError(e, OperationType.WRITE, `birthday_plans/${plan.id}`);
     throw e;
   }
 };
@@ -221,7 +225,7 @@ export const deletePlanFromFirestore = async (planId: string): Promise<void> => 
     await deleteDoc(docRef);
     console.log(`Plan ${planId} deleted from Firestore`);
   } catch (e) {
-    console.error('Error deleting from Firestore', e);
+    handleFirestoreError(e, OperationType.DELETE, `birthday_plans/${planId}`);
     throw e;
   }
 };
@@ -317,7 +321,7 @@ export const saveVendorApplicationToFirestore = async (application: VendorApplic
     await setDoc(docRef, application);
     console.log(`Vendor Application ${application.applicationId} saved to Firestore`);
   } catch (e) {
-    console.error('Error saving vendor application to Firestore', e);
+    handleFirestoreError(e, OperationType.WRITE, `vendorApplications/${application.applicationId}`);
     throw e;
   }
 };
@@ -332,7 +336,7 @@ export const getVendorApplicationsFromFirestore = async (): Promise<VendorApplic
     });
     return apps;
   } catch (e) {
-    console.error('Error fetching vendor applications from Firestore', e);
+    handleFirestoreError(e, OperationType.LIST, 'vendorApplications');
     return [];
   }
 };

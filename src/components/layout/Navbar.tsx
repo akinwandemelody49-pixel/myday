@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Calendar, LogOut, ShieldCheck, Award, User as UserIcon, Search, Bell } from 'lucide-react';
+import { Sparkles, Calendar, LogOut, ShieldCheck, Award, User as UserIcon, Search, Bell, Settings } from 'lucide-react';
 import { User } from '../../types';
 
 interface NavbarProps {
@@ -341,6 +341,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <Calendar className="w-3.5 h-3.5 mr-2 text-[#6C4CF1]" />
                       My Celebrations
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('settings')}
+                      className="w-full text-left px-4 py-2 text-xs text-neutral-600 hover:bg-[#6C4CF1]/5 hover:text-[#6C4CF1] transition-colors flex items-center cursor-pointer font-sans"
+                    >
+                      <Settings className="w-3.5 h-3.5 mr-2 text-[#6C4CF1]" />
+                      Profile Settings
                     </button>
                     <button
                       onClick={onLogout}

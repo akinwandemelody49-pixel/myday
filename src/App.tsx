@@ -14,6 +14,7 @@ import { InvitationView } from './components/views/InvitationView';
 import { VendorOnboardingView } from './components/views/VendorOnboardingView';
 import { VendorDashboardView } from './components/views/VendorDashboardView';
 import { AdminDashboardView } from './components/views/AdminDashboardView';
+import { ProfileSettingsView } from './components/views/ProfileSettingsView';
 import { getUserProfile, saveUserProfile, logSystemActivity } from './services/db_services';
 import { User, BirthdayPlan, Vendor } from './types';
 import { getStoredUser, saveStoredUser, DEFAULT_MOCK_USER } from './services/auth';
@@ -184,7 +185,7 @@ export default function App() {
       navigate('/admin/dashboard');
     } else if (tab === 'vendor-dashboard') {
       navigate('/vendor/dashboard');
-    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard' || tab === 'business-plan') {
+    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard' || tab === 'business-plan' || tab === 'settings') {
       navigate('/dashboard');
     }
   };
@@ -670,6 +671,25 @@ export default function App() {
                     user={user}
                     showNotification={showNotification}
                     onNavigateTab={handleTabChange}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'settings' && user && (
+                <motion.div
+                  key="settings"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <ProfileSettingsView
+                    user={user}
+                    onUpdateUser={(updatedUser) => {
+                      setUser(updatedUser);
+                      saveStoredUser(updatedUser);
+                    }}
+                    showNotification={showNotification}
                   />
                 </motion.div>
               )}

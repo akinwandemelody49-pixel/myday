@@ -39,9 +39,14 @@
   --color-primary-purple-hover: #5B3ED6;
   --color-accent-gold: #F4B400;
   --color-accent-gold-hover: #DCA200;
+
+  /* Standardized Border Radius (20px) for Luxury SaaS styling */
+  --radius-xl: 20px;
+  --radius-2xl: 20px;
+  --radius-3xl: 20px;
 }
 
-/* Base custom styles if needed */
+/* Base custom styles */
 html {
   scroll-behavior: smooth;
 }
@@ -56,4 +61,81 @@ body {
 html.dark body {
   background-color: #030303;
   color: #F9FAFB;
+}
+
+/* Luxury SaaS standard form controls */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="url"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  border-radius: 20px !important;
+  font-family: var(--font-sans);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Form input focus state */
+input:focus, 
+select:focus, 
+textarea:focus {
+  outline: none !important;
+  border-color: #6C4CF1 !important;
+  box-shadow: 0 0 0 3px rgba(108, 76, 241, 0.12) !important;
+}
+
+/* Dark mode overrides for luxury form controls */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="tel"],
+html.dark input[type="number"],
+html.dark input[type="url"],
+html.dark input[type="date"],
+html.dark input[type="time"],
+html.dark select,
+html.dark textarea {
+  background-color: #0E0D16 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #F1F5F9 !important;
+}
+
+html.dark input:focus, 
+html.dark select:focus, 
+html.dark textarea:focus {
+  border-color: #8B73FF !important;
+  box-shadow: 0 0 0 3px rgba(139, 115, 255, 0.18) !important;
+}
+
+/* Premium Typography Hierarchy globally standardized */
+h1, .font-h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+h2, .font-h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h3, .font-h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+h4, .font-h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }

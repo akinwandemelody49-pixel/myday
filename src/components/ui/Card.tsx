@@ -16,13 +16,13 @@ export const Card: React.FC<CardProps> = ({
   hoverEffect = false,
   variant = 'default',
 }) => {
-  const baseStyle = 'rounded-2xl overflow-hidden bg-white text-neutral-800 transition-all duration-300';
+  const baseStyle = 'rounded-[20px] overflow-hidden bg-white dark:bg-[#0E0D16] text-neutral-800 dark:text-neutral-200 transition-all duration-300';
   
   const variants = {
-    default: 'border border-neutral-100 shadow-xs',
-    luxury: 'border border-gold-100/40 bg-gradient-to-br from-white to-gold-50/10 shadow-md shadow-gold-500/2',
-    outline: 'border border-neutral-200',
-    flat: 'bg-neutral-50 border border-transparent',
+    default: 'border border-neutral-100 dark:border-white/[0.04] shadow-xs',
+    luxury: 'border border-gold-200/40 dark:border-gold-500/20 bg-gradient-to-br from-white to-gold-50/10 dark:from-[#0E0D16] dark:to-gold-950/5 shadow-md shadow-gold-500/2',
+    outline: 'border border-neutral-200 dark:border-white/[0.08]',
+    flat: 'bg-neutral-50 dark:bg-neutral-900 border border-transparent',
   };
 
   const isClickable = !!onClick;
@@ -54,14 +54,14 @@ export const Card: React.FC<CardProps> = ({
 export const CardHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = '',
-}) => <div className={`p-8 pb-6 md:p-10 md:pb-6 border-b border-neutral-100/60 ${className}`}>{children}</div>;
+}) => <div className={`p-6 pb-4 md:p-8 md:pb-5 border-b border-neutral-100/60 dark:border-white/[0.04] ${className}`}>{children}</div>;
 
 export const CardBody: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = '',
-}) => <div className={`p-8 md:p-10 ${className}`}>{children}</div>;
+}) => <div className={`p-6 md:p-8 ${className}`}>{children}</div>;
 
 export const CardFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = '',
-}) => <div className={`p-8 pt-6 md:p-10 md:pt-6 border-t border-neutral-100/60 bg-neutral-50/40 ${className}`}>{children}</div>;
+}) => <div className={`p-6 pt-4 md:p-8 md:pt-5 border-t border-neutral-100/60 dark:border-white/[0.04] bg-neutral-50/40 dark:bg-neutral-900/20 ${className}`}>{children}</div>;

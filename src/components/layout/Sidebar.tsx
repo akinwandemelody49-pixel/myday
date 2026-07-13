@@ -42,6 +42,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Business Pitch',
           icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
           description: 'MyDay Business Blueprint'
+        },
+        {
+          id: 'settings',
+          label: 'Profile Settings',
+          icon: <Settings className="w-5 h-5 text-amber-500" />,
+          description: 'Update profile and capture avatar'
         }
       ];
     }
@@ -59,6 +65,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Business Pitch',
           icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
           description: 'MyDay Business Blueprint'
+        },
+        {
+          id: 'settings',
+          label: 'Profile Settings',
+          icon: <Settings className="w-5 h-5 text-[#6C4CF1]" />,
+          description: 'Update profile and capture avatar'
         }
       ];
     }
@@ -99,6 +111,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         label: 'Business Pitch',
         icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
         description: 'MyDay Business Blueprint'
+      },
+      {
+        id: 'settings',
+        label: 'Profile Settings',
+        icon: <Settings className="w-5 h-5 text-[#6C4CF1]" />,
+        description: 'Update profile and capture avatar'
       }
     ];
   };
