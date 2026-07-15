@@ -19,6 +19,7 @@ import { ProfileSettingsView } from './components/views/ProfileSettingsView';
 import { CheckoutView } from './components/views/CheckoutView';
 import { BudgetPlannerView } from './components/views/BudgetPlannerView';
 import { CelebrationTimelineView } from './components/views/CelebrationTimelineView';
+import { NotificationCenterView } from './components/views/NotificationCenterView';
 import { getUserProfile, saveUserProfile, logSystemActivity } from './services/db_services';
 import { User, BirthdayPlan, Vendor } from './types';
 import { getStoredUser, saveStoredUser, DEFAULT_MOCK_USER } from './services/auth';
@@ -189,7 +190,7 @@ export default function App() {
       navigate('/admin/dashboard');
     } else if (tab === 'vendor-dashboard') {
       navigate('/vendor/dashboard');
-    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard' || tab === 'business-plan' || tab === 'settings' || tab === 'checkout') {
+    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard' || tab === 'business-plan' || tab === 'settings' || tab === 'checkout' || tab === 'notifications') {
       navigate('/dashboard');
     }
   };
@@ -776,6 +777,22 @@ export default function App() {
                   />
                 </motion.div>
               )}
+
+              {activeTab === 'notifications' && (
+                <motion.div
+                  key="notifications"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <NotificationCenterView
+                    user={user}
+                    showNotification={showNotification}
+                    onNavigateTab={handleTabChange}
+                  />
+                </motion.div>
+              )}
             </AnimatePresence>
           </main>
         </div>
@@ -968,6 +985,22 @@ export default function App() {
               <VendorDashboardView
                 onGoHome={() => setActiveTab('home')}
                 showNotification={showNotification}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <motion.div
+              key="notifications"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <NotificationCenterView
+                user={user}
+                showNotification={showNotification}
+                onNavigateTab={handleTabChange}
               />
             </motion.div>
           )}

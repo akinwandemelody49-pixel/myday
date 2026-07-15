@@ -38,6 +38,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           description: 'Platform management center'
         },
         {
+          id: 'notifications',
+          label: 'Notification Center',
+          icon: <Bell className="w-5 h-5 text-[#6C4CF1]" />,
+          description: 'Manage alerts and channels'
+        },
+        {
           id: 'business-plan',
           label: 'Business Pitch',
           icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
@@ -59,6 +65,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Vendor Console',
           icon: <LayoutDashboard className="w-5 h-5 text-emerald-500" />,
           description: 'Business & orders overview'
+        },
+        {
+          id: 'notifications',
+          label: 'Notification Center',
+          icon: <Bell className="w-5 h-5 text-[#6C4CF1]" />,
+          description: 'Manage alerts and channels'
         },
         {
           id: 'business-plan',
@@ -141,6 +153,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         label: 'Profile Settings',
         icon: <Settings className="w-5 h-5 text-[#6C4CF1]" />,
         description: 'Update profile and capture avatar'
+      },
+      {
+        id: 'notifications',
+        label: 'Notification Center',
+        icon: <Bell className="w-5 h-5 text-[#6C4CF1]" />,
+        description: 'Manage alerts and channels'
       }
     ];
   };

@@ -561,17 +561,39 @@ export const updateBookingStatus = async (
 
 export const createNotification = async (notification: Omit<DBNotification, 'id'>): Promise<string> => {
   const path = 'notifications';
+  // Check if guest or offline
+  if (!notification.userId || notification.userId === 'guest') {
+    const cachedStr = localStorage.getItem('myday_notifications_guest') || '[]';
+    const cached = JSON.parse(cachedStr) as DBNotification[];
+    const id = 'notif_' + Math.random().toString(36).substring(2, 11);
+    const newNotif: DBNotification = { ...notification, id };
+    cached.unshift(newNotif);
+    localStorage.setItem('myday_notifications_guest', JSON.stringify(cached.slice(0, 50)));
+    return id;
+  }
   try {
     const docRef = await addDoc(collection(db, 'notifications'), notification);
     return docRef.id;
   } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, path);
-    throw error;
+    // offline fallback
+    const cachedStr = localStorage.getItem(`myday_notifications_${notification.userId}`) || '[]';
+    const cached = JSON.parse(cachedStr) as DBNotification[];
+    const id = 'notif_offline_' + Math.random().toString(36).substring(2, 11);
+    const newNotif: DBNotification = { ...notification, id };
+    cached.unshift(newNotif);
+    localStorage.setItem(`myday_notifications_${notification.userId}`, JSON.stringify(cached.slice(0, 50)));
+    
+    console.warn('Firestore createNotification failed, saved to local cache:', error);
+    return id;
   }
 };
 
 export const getNotifications = async (userId: string): Promise<DBNotification[]> => {
   const path = 'notifications';
+  if (!userId || userId === 'guest') {
+    const cachedStr = localStorage.getItem('myday_notifications_guest') || '[]';
+    return JSON.parse(cachedStr) as DBNotification[];
+  }
   try {
     const q = query(
       collection(db, 'notifications'), 
@@ -584,6 +606,8 @@ export const getNotifications = async (userId: string): Promise<DBNotification[]
     querySnapshot.forEach((docSnap) => {
       notifications.push({ ...docSnap.data(), id: docSnap.id } as DBNotification);
     });
+    // Sync to local cache
+    localStorage.setItem(`myday_notifications_${userId}`, JSON.stringify(notifications));
     return notifications;
   } catch (error) {
     try {
@@ -593,21 +617,89 @@ export const getNotifications = async (userId: string): Promise<DBNotification[]
       querySnapshot.forEach((docSnap) => {
         notifications.push({ ...docSnap.data(), id: docSnap.id } as DBNotification);
       });
+      localStorage.setItem(`myday_notifications_${userId}`, JSON.stringify(notifications));
       return notifications;
     } catch (fallbackError) {
-      handleFirestoreError(fallbackError, OperationType.LIST, path);
-      return [];
+      console.warn(`Firestore getNotifications failed, returning local cache for ${userId}:`, fallbackError);
+      const cachedStr = localStorage.getItem(`myday_notifications_${userId}`) || '[]';
+      return JSON.parse(cachedStr) as DBNotification[];
     }
   }
 };
 
-export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+export const markNotificationAsRead = async (notificationId: string, userId?: string): Promise<void> => {
   const path = `notifications/${notificationId}`;
+  
+  // Handle guest or offline notifications
+  if (notificationId.startsWith('notif_') || !userId || userId === 'guest') {
+    const key = (!userId || userId === 'guest') ? 'myday_notifications_guest' : `myday_notifications_${userId}`;
+    const cachedStr = localStorage.getItem(key) || '[]';
+    const cached = JSON.parse(cachedStr) as DBNotification[];
+    const updated = cached.map(n => n.id === notificationId ? { ...n, read: true } : n);
+    localStorage.setItem(key, JSON.stringify(updated));
+    if (notificationId.startsWith('notif_offline_') || notificationId.startsWith('notif_')) {
+      return;
+    }
+  }
+
   try {
     const docRef = doc(db, 'notifications', notificationId);
     await updateDoc(docRef, { read: true });
   } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, path);
+    console.warn(`Firestore markNotificationAsRead failed for ${notificationId}, updated locally:`, error);
+  }
+};
+
+export const deleteNotification = async (notificationId: string, userId?: string): Promise<void> => {
+  const path = `notifications/${notificationId}`;
+  
+  // Handle guest or offline notifications
+  if (notificationId.startsWith('notif_') || !userId || userId === 'guest') {
+    const key = (!userId || userId === 'guest') ? 'myday_notifications_guest' : `myday_notifications_${userId}`;
+    const cachedStr = localStorage.getItem(key) || '[]';
+    const cached = JSON.parse(cachedStr) as DBNotification[];
+    const updated = cached.filter(n => n.id !== notificationId);
+    localStorage.setItem(key, JSON.stringify(updated));
+    if (notificationId.startsWith('notif_offline_') || notificationId.startsWith('notif_')) {
+      return;
+    }
+  }
+
+  try {
+    const docRef = doc(db, 'notifications', notificationId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.warn(`Firestore deleteNotification failed for ${notificationId}, updated locally:`, error);
+  }
+};
+
+export const markAllNotificationsAsRead = async (userId: string, notificationIds: string[]): Promise<void> => {
+  if (!userId || userId === 'guest') {
+    const cachedStr = localStorage.getItem('myday_notifications_guest') || '[]';
+    const cached = JSON.parse(cachedStr) as DBNotification[];
+    const updated = cached.map(n => ({ ...n, read: true }));
+    localStorage.setItem('myday_notifications_guest', JSON.stringify(updated));
+    return;
+  }
+
+  // Update locally first
+  const key = `myday_notifications_${userId}`;
+  const cachedStr = localStorage.getItem(key) || '[]';
+  const cached = JSON.parse(cachedStr) as DBNotification[];
+  const updated = cached.map(n => ({ ...n, read: true }));
+  localStorage.setItem(key, JSON.stringify(updated));
+
+  // Update in Firestore
+  try {
+    const promises = notificationIds
+      .filter(id => !id.startsWith('notif_'))
+      .map(async (id) => {
+        const docRef = doc(db, 'notifications', id);
+        return updateDoc(docRef, { read: true });
+      });
+    await Promise.all(promises);
+  } catch (error) {
+    console.warn(`Firestore markAllNotificationsAsRead failed, updated locally:`, error);
   }
 };
 

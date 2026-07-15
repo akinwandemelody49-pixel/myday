@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Calendar, LogOut, ShieldCheck, Award, User as UserIcon, Search, Bell, Settings, Sun, Moon } from 'lucide-react';
 import { User } from '../../types';
+import { getNotifications, markNotificationAsRead, DBNotification } from '../../services/db_services';
 
 interface NavbarProps {
   user: User | null;
@@ -23,6 +24,28 @@ export const Navbar: React.FC<NavbarProps> = ({
   isDark = false,
   toggleTheme,
 }) => {
+
+  const [notifications, setNotifications] = useState<DBNotification[]>([]);
+
+  useEffect(() => {
+    const fetchNavbarNotifications = async () => {
+      const userId = user?.uid || 'guest';
+      try {
+        const data = await getNotifications(userId);
+        setNotifications(data);
+      } catch (err) {
+        console.error("Error loading navbar notifications:", err);
+      }
+    };
+
+    fetchNavbarNotifications();
+
+    // Set up poller to fetch new notifications every 6 seconds to keep it synchronized
+    const interval = setInterval(fetchNavbarNotifications, 6000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleScrollTo = (id: string) => {
     if (activeTab !== 'home') {
@@ -323,30 +346,64 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Notification Bell */}
               <div className="relative group/bell">
-                <button className="p-2 text-neutral-500 hover:text-[#6C4CF1] dark:text-neutral-400 dark:hover:text-[#8B73FF] hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded-full transition-colors relative cursor-pointer">
+                <button 
+                  onClick={() => setActiveTab('notifications')}
+                  className="p-2 text-neutral-500 hover:text-[#6C4CF1] dark:text-neutral-400 dark:hover:text-[#8B73FF] hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded-full transition-colors relative cursor-pointer"
+                >
                   <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#F4B400] rounded-full border border-white dark:border-neutral-950" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#F4B400] rounded-full border border-white dark:border-neutral-950 animate-pulse" />
+                  )}
                 </button>
                 
                 {/* Popover notifications list on hover */}
-                <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-neutral-950 rounded-2xl shadow-xl py-3 border border-neutral-100 dark:border-neutral-900 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                  <div className="px-4 pb-2 border-b border-neutral-50 dark:border-neutral-900 flex items-center justify-between">
+                <div className="absolute right-0 top-full mt-2 w-76 bg-white dark:bg-[#0A0A0A] rounded-2xl shadow-xl py-3 border border-neutral-100 dark:border-neutral-900 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                  <div className="px-4 pb-2 border-b border-neutral-100/60 dark:border-neutral-900 flex items-center justify-between">
                     <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">Notifications</span>
-                    <span className="text-[9px] font-mono font-bold bg-[#6C4CF1]/10 text-[#6C4CF1] px-1.5 py-0.5 rounded-full dark:bg-[#8B73FF]/15 dark:text-[#8B73FF]">3 New</span>
+                    {unreadCount > 0 ? (
+                      <span className="text-[9px] font-mono font-bold bg-[#6C4CF1]/10 text-[#6C4CF1] px-1.5 py-0.5 rounded-full dark:bg-[#8B73FF]/15 dark:text-[#8B73FF]">{unreadCount} Unread</span>
+                    ) : (
+                      <span className="text-[9px] font-mono font-bold bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded-full dark:bg-neutral-900 dark:text-neutral-400">Up to date</span>
+                    )}
                   </div>
-                  <div className="divide-y divide-neutral-50/50 dark:divide-neutral-900 max-h-60 overflow-y-auto">
-                    <div className="px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors">
-                      <p className="text-[11px] text-neutral-700 dark:text-neutral-300 leading-normal font-light">✨ AI curated 3 new themes for Sarah's party!</p>
-                      <p className="text-[9px] text-neutral-400 dark:text-neutral-500 font-mono mt-0.5">5m ago</p>
-                    </div>
-                    <div className="px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors">
-                      <p className="text-[11px] text-neutral-700 dark:text-neutral-300 leading-normal font-light">🎉 Reminder: Jordan's birthday is in 5 days.</p>
-                      <p className="text-[9px] text-neutral-400 dark:text-neutral-500 font-mono mt-0.5">2h ago</p>
-                    </div>
-                    <div className="px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors">
-                      <p className="text-[11px] text-neutral-700 dark:text-neutral-300 leading-normal font-light">🎈 Vendor 'Bubble Pop Balloons' added new catalog items.</p>
-                      <p className="text-[9px] text-neutral-400 dark:text-neutral-500 font-mono mt-0.5">1d ago</p>
-                    </div>
+                  <div className="divide-y divide-neutral-100/60 dark:divide-neutral-900 max-h-60 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-neutral-400 dark:text-neutral-500 text-xs">
+                        No notifications yet
+                      </div>
+                    ) : (
+                      notifications.slice(0, 4).map((notif) => (
+                        <div 
+                          key={notif.id} 
+                          onClick={() => {
+                            if (!notif.read && notif.id) {
+                              markNotificationAsRead(notif.id, user?.uid || 'guest');
+                              setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+                            }
+                            setActiveTab('notifications');
+                          }}
+                          className={`px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-900/40 transition-colors cursor-pointer text-left ${notif.read ? 'opacity-60' : ''}`}
+                        >
+                          <div className="flex items-start space-x-2">
+                            <span className="text-xs leading-normal font-medium text-neutral-700 dark:text-neutral-300 line-clamp-2">
+                              {!notif.read && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#6C4CF1] mr-1.5 mb-0.5 animate-pulse" />}
+                              <strong className="font-semibold">{notif.title}: </strong>{notif.message}
+                            </span>
+                          </div>
+                          <p className="text-[8.5px] text-neutral-400 dark:text-neutral-500 font-mono mt-1">
+                            {new Date(notif.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="px-4 pt-2 border-t border-neutral-100/60 dark:border-neutral-900 flex justify-center">
+                    <button 
+                      onClick={() => setActiveTab('notifications')}
+                      className="text-[10px] font-bold text-[#6C4CF1] hover:text-[#5B3ED6] dark:text-[#8B73FF] dark:hover:text-[#A18CFF] cursor-pointer bg-transparent border-0 outline-none"
+                    >
+                      View All in Center
+                    </button>
                   </div>
                 </div>
               </div>
