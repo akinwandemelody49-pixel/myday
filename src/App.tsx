@@ -11,10 +11,14 @@ import { DashboardView } from './components/views/DashboardView';
 import { AIResultsView } from './components/views/AIResultsView';
 import { BusinessPlanView } from './components/views/BusinessPlanView';
 import { InvitationView } from './components/views/InvitationView';
+import { InvitationGeneratorView } from './components/views/InvitationGeneratorView';
 import { VendorOnboardingView } from './components/views/VendorOnboardingView';
 import { VendorDashboardView } from './components/views/VendorDashboardView';
 import { AdminDashboardView } from './components/views/AdminDashboardView';
 import { ProfileSettingsView } from './components/views/ProfileSettingsView';
+import { CheckoutView } from './components/views/CheckoutView';
+import { BudgetPlannerView } from './components/views/BudgetPlannerView';
+import { CelebrationTimelineView } from './components/views/CelebrationTimelineView';
 import { getUserProfile, saveUserProfile, logSystemActivity } from './services/db_services';
 import { User, BirthdayPlan, Vendor } from './types';
 import { getStoredUser, saveStoredUser, DEFAULT_MOCK_USER } from './services/auth';
@@ -185,7 +189,7 @@ export default function App() {
       navigate('/admin/dashboard');
     } else if (tab === 'vendor-dashboard') {
       navigate('/vendor/dashboard');
-    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard' || tab === 'business-plan' || tab === 'settings') {
+    } else if (tab === 'planner' || tab === 'vendors' || tab === 'plan-wizard' || tab === 'dashboard' || tab === 'business-plan' || tab === 'settings' || tab === 'checkout') {
       navigate('/dashboard');
     }
   };
@@ -589,12 +593,68 @@ export default function App() {
                       setActiveTab('planner');
                     }}
                     onBookVendors={() => {
-                      setActiveTab('vendors');
+                      setActiveTab('checkout');
+                    }}
+                    onDesignInvitation={() => {
+                      setActiveTab('invitation-generator');
                     }}
                     onBack={() => {
                       setActiveTab('dashboard');
                     }}
                     showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'invitation-generator' && (
+                <motion.div
+                  key="invitation-generator"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <InvitationGeneratorView
+                    user={user}
+                    activePlan={selectedPlanForResults || plans[0] || null}
+                    onGoBack={() => {
+                      if (selectedPlanForResults) {
+                        setActiveTab('ai-results');
+                      } else {
+                        setActiveTab('dashboard');
+                      }
+                    }}
+                    showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'budget-planner' && (
+                <motion.div
+                  key="budget-planner"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <BudgetPlannerView
+                    user={user}
+                    onNavigateToTab={handleTabChange}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'celebration-timeline' && (
+                <motion.div
+                  key="celebration-timeline"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <CelebrationTimelineView
+                    user={user}
+                    onNavigateToTab={handleTabChange}
                   />
                 </motion.div>
               )}
@@ -612,6 +672,29 @@ export default function App() {
                     plans={plans}
                     onLinkVendorToPlan={handleLinkVendorToPlan}
                     activePlanName={plans[0]?.celebrantName}
+                    showNotification={showNotification}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'checkout' && (
+                <motion.div
+                  key="checkout"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <CheckoutView
+                    plan={selectedPlanForResults || plans[0] || null}
+                    onBack={() => {
+                      if (selectedPlanForResults) {
+                        setActiveTab('ai-results');
+                      } else {
+                        setActiveTab('dashboard');
+                      }
+                    }}
+                    onNavigateTab={handleTabChange}
                     showNotification={showNotification}
                   />
                 </motion.div>
@@ -726,6 +809,8 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         onNewPlan={handleStartPlanning}
+        isDark={isDark}
+        toggleTheme={toggleTheme}
       />
 
       {/* Main Container Workspace */}
@@ -817,6 +902,29 @@ export default function App() {
                 plans={plans}
                 onLinkVendorToPlan={handleLinkVendorToPlan}
                 activePlanName={plans[0]?.celebrantName}
+                showNotification={showNotification}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'checkout' && (
+            <motion.div
+              key="checkout"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <CheckoutView
+                plan={selectedPlanForResults || plans[0] || null}
+                onBack={() => {
+                  if (selectedPlanForResults) {
+                    setActiveTab('ai-results');
+                  } else {
+                    setActiveTab('home');
+                  }
+                }}
+                onNavigateTab={handleTabChange}
                 showNotification={showNotification}
               />
             </motion.div>

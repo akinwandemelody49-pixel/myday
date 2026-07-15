@@ -24,10 +24,24 @@ export interface ItineraryItem {
   estimatedCost: number;
 }
 
+export interface VendorReview {
+  author: string;
+  rating: number;
+  text: string;
+  date: string;
+  avatar?: string;
+}
+
+export interface PricingTier {
+  name: string;
+  price: number;
+  features: string[];
+}
+
 export interface Vendor {
   id: string;
   name: string;
-  category: 'venue' | 'catering' | 'decor' | 'entertainment' | 'photography' | 'gifts' | 'baking';
+  category: string; // Flexible to support custom marketplace categories
   rating: number;
   reviewsCount: number;
   priceRange: 'low' | 'medium' | 'high' | 'luxury';
@@ -36,6 +50,15 @@ export interface Vendor {
   description: string;
   contactEmail?: string;
   contactPhone?: string;
+  logoUrl?: string; // Business Logo
+  startingPrice?: number; // Starting Price
+  availability?: string; // E.g. "Available", "Booked", "Weekends Only"
+  isVerified?: boolean; // Verified Badge
+  gallery?: string[]; // Gallery images
+  services?: string[]; // Services list
+  reviews?: VendorReview[]; // Detailed Reviews
+  pricingTiers?: PricingTier[]; // Pricing tiers
+  availableDates?: string[]; // Dates for Calendar
 }
 
 export interface BirthdayPlan {
@@ -110,4 +133,78 @@ export interface VendorApplication {
   status: 'Pending' | 'Approved' | 'Rejected';
   submittedAt: string;
 }
+
+export interface Invitation {
+  invitationId: string;
+  userId: string;
+  birthdayPlanId: string;
+  template: string;
+  title: string;
+  guestName?: string;
+  eventDate?: string;
+  venue?: string;
+  theme?: string;
+  imageUrl: string;
+  pdfUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  message: string;
+  designSettings: {
+    bgColor: string;
+    fontColor: string;
+    fontFamily: string;
+    borderStyle: string;
+    fontSize: number;
+    backgroundImage: string;
+    patterns: string;
+    shapes: string;
+    showBalloons: boolean;
+    showFlowers: boolean;
+    showConfetti: boolean;
+    showCake: boolean;
+    showAfricanDecor: boolean;
+    decorations: string[];
+    photoCropX: number;
+    photoCropY: number;
+    photoScale: number;
+    photoRotate: number;
+  };
+  eventDetails: {
+    birthdayName: string;
+    age: string;
+    eventDate: string;
+    eventTime: string;
+    venue: string;
+    dressCode: string;
+    theme: string;
+    hostName: string;
+    rsvpPhone: string;
+    specialMessage: string;
+  };
+  config?: {
+    birthdayName: string;
+    age: string;
+    eventTime: string;
+    dressCode: string;
+    rsvpPhone: string;
+    specialMessage: string;
+    hostName: string;
+    style: string;
+    wording: string;
+    bgColor: string;
+    fontColor: string;
+    fontFamily: string;
+    borderStyle: string;
+    celebrantPhotoUrl?: string;
+    photoCropX?: number;
+    photoCropY?: number;
+    photoScale?: number;
+    showBalloons: boolean;
+    showFlowers: boolean;
+    showConfetti: boolean;
+    showCake: boolean;
+    showAfricanDecor: boolean;
+  };
+}
+
 

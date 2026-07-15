@@ -156,6 +156,153 @@ app.post('/api/generate-plan', async (req, res) => {
   }
 });
 
+// API: Generate AI Invitation Wording
+app.post('/api/generate-invitation-wording', async (req, res) => {
+  const { birthdayName, age, eventDate, eventTime, venue, dressCode, specialMessage, hostName, style } = req.body;
+
+  if (!birthdayName || !venue) {
+    return res.status(400).json({ error: 'Missing required parameters: birthdayName and venue are required.' });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+    console.warn('GEMINI_API_KEY is not set or using placeholder. Running in High-Fidelity Mock AI mode for Invitations.');
+    return res.json(generateLocalMockInvitationWording(birthdayName, age, eventDate, eventTime, venue, dressCode, specialMessage, hostName, style));
+  }
+
+  try {
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+
+    const prompt = `
+      You are MyDay AI, an expert bespoke designer of premium invitations.
+      Generate beautiful, creative, and captivating birthday invitation wording based on these details:
+      - Birthday Person Name: "${birthdayName}"
+      - Celebrating Age: ${age || 'N/A'}
+      - Event Date: "${eventDate}"
+      - Event Time: "${eventTime || 'N/A'}"
+      - Venue: "${venue}"
+      - Dress Code: "${dressCode || 'N/A'}"
+      - Special Message: "${specialMessage || 'none'}"
+      - Host Name: "${hostName || 'none'}"
+      - Style Selected: "${style}" (e.g. Elegant, Luxury, Modern, Fun, Kids, Traditional, Romantic, Minimal)
+
+      Return a JSON object conforming exactly to the responseSchema structure.
+      The phrasing must be highly customized to the selected style.
+      For example:
+      - Luxury: use royal, opulent, upscale words (e.g., "The pleasure of your company is requested at the grand soirée...", "Dressed in gold...")
+      - Traditional: use culturally rich, warm words (e.g., "Join us for a celebration of grace, culture, and life...")
+      - Minimal: clean, direct, stylish, simple.
+      - Fun: energetic, exciting, cheerful.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            motto: { type: Type.STRING },
+            body: { type: Type.STRING },
+            rsvpText: { type: Type.STRING }
+          },
+          required: ["motto", "body", "rsvpText"]
+        }
+      }
+    });
+
+    const text = response.text;
+    if (!text) {
+      throw new Error('Empty response from Gemini API');
+    }
+
+    const invitationWording = JSON.parse(text);
+    return res.json(invitationWording);
+  } catch (err: any) {
+    console.error('Gemini API Error for invitation wording:', err);
+    return res.json(generateLocalMockInvitationWording(birthdayName, age, eventDate, eventTime, venue, dressCode, specialMessage, hostName, style));
+  }
+});
+
+// Helper for Mock Invitation Wording Generation
+function generateLocalMockInvitationWording(
+  birthdayName: string,
+  age: string,
+  eventDate: string,
+  eventTime: string,
+  venue: string,
+  dressCode: string,
+  specialMessage: string,
+  hostName: string,
+  style: string
+) {
+  const yearsOldStr = age ? `${age}th ` : '';
+  const hostIntro = hostName ? `Together with their host, ${hostName}, ` : '';
+  const dressCodeStr = dressCode ? `\nDress Code: ${dressCode}` : '';
+  const msgStr = specialMessage ? `\n\n"${specialMessage}"` : '';
+  const formattedDate = eventDate ? new Date(eventDate).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }) : 'Special Day';
+
+  const styles: { [key: string]: { motto: string; body: string; rsvpText: string } } = {
+    Elegant: {
+      motto: `An Evening of Grace and Celebration`,
+      body: `${hostIntro}you are cordially invited to celebrate the ${yearsOldStr}Birthday of ${birthdayName}.\n\nJoin us for a curated soirée filled with fine dining, music, and beautiful memories at the stunning ${venue}.\n\nDate: ${formattedDate}\nTime: ${eventTime || '18:00 PM'}${dressCodeStr}${msgStr}`,
+      rsvpText: `Kindly RSVP to confirm your attendance`
+    },
+    Luxury: {
+      motto: `The Grand Golden Jubilee`,
+      body: `Requesting the honor of your presence at the grand birthday celebration honoring ${birthdayName}'s ${yearsOldStr}milestone.\n\nPrepare for an exquisite evening of opulence, fine champagne, and bespoke experiences under the stars at ${venue}.\n\nDate: ${formattedDate}\nTime: ${eventTime || '19:00 PM'}${dressCodeStr}${msgStr}`,
+      rsvpText: `RSVP is strictly required for entry`
+    },
+    Modern: {
+      motto: `Let's Celebrate: ${birthdayName}`,
+      body: `It's a milestone year! We are marking ${birthdayName}'s ${yearsOldStr}Birthday with sleek beats, modern aesthetics, and interactive culinary stations at ${venue}.\n\nDate: ${formattedDate}\nTime: ${eventTime || '20:00 PM'}${dressCodeStr}${msgStr}`,
+      rsvpText: `Hit us back by Friday to save your spot`
+    },
+    Fun: {
+      motto: `Pop the Bubbly, Let's Party!`,
+      body: `Ready, set, celebrate! ${birthdayName} is turning ${age || 'another year older'} and we are throwing an epic bash at ${venue}.\n\nExpect delicious small chops, high-energy tracks, and a whole lot of laughter. Don't miss out!\n\nDate: ${formattedDate}\nTime: ${eventTime || '17:00 PM'}${dressCodeStr}${msgStr}`,
+      rsvpText: `RSVP now and get ready to dance!`
+    },
+    Kids: {
+      motto: `A Magical Fun Adventure!`,
+      body: `Calling all friends! Join us for a fun-filled birthday adventure as we celebrate ${birthdayName}'s ${yearsOldStr}Birthday!\n\nThere will be cake, fun games, balloons, and sweet treats at ${venue}.\n\nDate: ${formattedDate}\nTime: ${eventTime || '14:00 PM'}${dressCodeStr}${msgStr}`,
+      rsvpText: `Please let parents know if you can make it!`
+    },
+    Traditional: {
+      motto: `Honoring Culture, Grace, and Life`,
+      body: `Join us in giving thanks as we celebrate the ${yearsOldStr}Birthday of our beloved ${birthdayName}.\n\nWe gather in cultural elegance, traditional attire, and joyous gratitude at ${venue}.\n\nDate: ${formattedDate}\nTime: ${eventTime || '16:00 PM'}${dressCodeStr}${msgStr}`,
+      rsvpText: `Kindly RSVP to join us in celebration`
+    },
+    Romantic: {
+      motto: `Under the Stars & Candlelight`,
+      body: `With warm hearts and starlit skies, we invite you to an intimate evening celebrating ${birthdayName}'s ${yearsOldStr}Birthday.\n\nA gentle celebration of love, life, and sweet friendship at ${venue}.\n\nDate: ${formattedDate}\nTime: ${eventTime || '18:30 PM'}${dressCodeStr}${msgStr}`,
+      rsvpText: `Please share your RSVP response with us`
+    },
+    Minimal: {
+      motto: `${birthdayName} • ${yearsOldStr || ''}Birthday`,
+      body: `Please join us to celebrate ${birthdayName}.\n\nVenue: ${venue}\nDate: ${formattedDate}\nTime: ${eventTime || '19:00 PM'}${dressCodeStr}${msgStr}`,
+      rsvpText: `RSVP requested`
+    }
+  };
+
+  const key = style ? (style.charAt(0).toUpperCase() + style.slice(1).toLowerCase()) : 'Elegant';
+  return styles[key] || styles.Elegant;
+}
+
 // Helper for Mock AI generation
 function generateLocalMockAIPlan(
   celebrantName: string,
@@ -321,6 +468,418 @@ function generateLocalMockAIPlan(
       `Secret Cues: Coordinate a signal with the caterer to sync table lighting dim with music key shifts.`,
       `Guest Capture QR: Display a sleek printed QR code sign at the venue entrance for guest uploads.`
     ]
+  };
+}
+
+// API: Generate AI Budget Plan
+app.post('/api/generate-budget', async (req, res) => {
+  const { budget, eventType, guestCount, theme, location } = req.body;
+
+  if (!budget || !eventType) {
+    return res.status(400).json({ error: 'Missing required parameters: budget and eventType are required.' });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+    console.warn('GEMINI_API_KEY is not set or using placeholder. Running in High-Fidelity Mock AI mode for Budgets.');
+    return res.json(generateLocalMockAIBudget(Number(budget), eventType, Number(guestCount || 50), theme || 'Elegant', location || 'Lagos'));
+  }
+
+  try {
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+
+    const prompt = `
+      You are MyDay Budget AI, a premium luxury event budget strategist.
+      Create a highly optimized, professional budget distribution for a birthday or event:
+      - Total Budget: ${budget}
+      - Event Type: "${eventType}"
+      - Guest Count: ${guestCount || 'unspecified'}
+      - Theme/Style: "${theme || 'Elegant'}"
+      - Location: "${location || 'unspecified'}"
+
+      You MUST distribute the total budget of ${budget} across these EXACT 10 categories:
+      1. "Cake"
+      2. "Photography"
+      3. "Decor"
+      4. "Restaurants"
+      5. "Event Halls"
+      6. "MC"
+      7. "DJ"
+      8. "Makeup Artist"
+      9. "Gift Shops"
+      10. "Catering"
+
+      The sum of the costs for all 10 categories MUST sum up exactly to the total budget: ${budget}.
+      Provide a highly realistic, premium allocation tailored to the event type "${eventType}", theme "${theme}", and location "${location}".
+      
+      Generate:
+      - allocatedCategories: array of objects representing the distribution with properties: categoryName, percentage (integer), cost (integer), description (concise reason why this is allocated)
+      - warnings: array of strings containing potential issues (e.g. if budget per guest is tight, if any essential category has insufficient funds for the chosen style/location, etc.)
+      - savingsSuggestions: array of strings containing smart, custom, elite ways to save on categories based on the event description
+      - explanation: a beautiful summary explaining the overall financial strategy for this luxury event.
+
+      Return a JSON object conforming exactly to the responseSchema structure.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            explanation: { type: Type.STRING },
+            allocatedCategories: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  categoryName: { type: Type.STRING },
+                  percentage: { type: Type.INTEGER },
+                  cost: { type: Type.INTEGER },
+                  description: { type: Type.STRING }
+                },
+                required: ["categoryName", "percentage", "cost", "description"]
+              }
+            },
+            warnings: { type: Type.ARRAY, items: { type: Type.STRING } },
+            savingsSuggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["explanation", "allocatedCategories", "warnings", "savingsSuggestions"]
+        }
+      }
+    });
+
+    const text = response.text;
+    if (!text) {
+      throw new Error('Empty response from Gemini API');
+    }
+
+    const budgetData = JSON.parse(text);
+    return res.json(budgetData);
+  } catch (err: any) {
+    console.error('Gemini API Error for budget planner:', err);
+    return res.json(generateLocalMockAIBudget(Number(budget), eventType, Number(guestCount || 50), theme || 'Elegant', location || 'Lagos'));
+  }
+});
+
+// API: Generate AI Celebration Timeline
+app.post('/api/generate-timeline', async (req, res) => {
+  const { eventDate, eventType, theme, interests } = req.body;
+
+  if (!eventDate || !eventType) {
+    return res.status(400).json({ error: 'Missing required parameters: eventDate and eventType are required.' });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+    console.warn('GEMINI_API_KEY is not set or using placeholder. Running in High-Fidelity Mock AI mode for Timelines.');
+    return res.json(generateLocalMockTimeline(eventDate, eventType, theme || 'Elegant'));
+  }
+
+  try {
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+
+    const prompt = `
+      You are MyDay Celebration Timeline AI, an expert premium event coordinator.
+      Create a comprehensive, highly personalized chronological planning checklist and timeline leading up to the celebration date:
+      - Celebration Date: "${eventDate}"
+      - Event Type/Occasion: "${eventType}"
+      - Theme/Style: "${theme || 'Elegant'}"
+      - Interests/Affinities: "${interests ? interests.join(', ') : 'None'}"
+
+      Create 6-10 chronological checklist tasks distributed across these 5 phases of event execution:
+      - "planning" (e.g., 30 to 45 days before: concept, theme, initial estimates, guest cap)
+      - "booking" (e.g., 18 to 30 days before: contracting key vendors like venue, music, photography)
+      - "invitations" (e.g., 10 to 18 days before: invitation creation, sending, dress-code communication, RSVP monitoring)
+      - "final_touches" (e.g., 3 to 10 days before: catering headcount confirmation, beauty/glam appointment, coordinate surprise details)
+      - "day_of" (e.g., 0 days before: setups, MC sound check, cake, and enjoyment)
+
+      For each task, return:
+      - title: A specific, descriptive action title (e.g. "Select Venue" or "Dispatch Digital Invitations via MyDay")
+      - description: A premium, tailored tip or checklist instruction specific to the theme "${theme || 'Elegant'}" and event type "${eventType}".
+      - daysBefore: Number of days before the celebration date when this task is due (e.g. 30, 20, 14, 5, 0).
+      - phase: One of "planning" | "booking" | "invitations" | "final_touches" | "day_of"
+      - linkedType: If this task represents a platform module, link it: "booking" for finding/securing vendors, "invitation" for digital RSVP dispatch, "budget" for financial allocation, or "none".
+      - reminderDaysBefore: Number of days before the task's due date when an automatic reminder should trigger (e.g. 2 or 3 days before).
+
+      Ensure the dates correspond logically to the target celebration date. Return a JSON object matching the responseSchema exactly.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            tasks: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                  daysBefore: { type: Type.INTEGER },
+                  phase: { type: Type.STRING },
+                  linkedType: { type: Type.STRING },
+                  reminderDaysBefore: { type: Type.INTEGER }
+                },
+                required: ["title", "description", "daysBefore", "phase", "linkedType", "reminderDaysBefore"]
+              }
+            }
+          },
+          required: ["tasks"]
+        }
+      }
+    });
+
+    const text = response.text;
+    if (!text) {
+      throw new Error('Empty response from Gemini API');
+    }
+
+    const timelineData = JSON.parse(text);
+    return res.json(timelineData);
+  } catch (err: any) {
+    console.error('Gemini API Error for timeline planner:', err);
+    return res.json(generateLocalMockTimeline(eventDate, eventType, theme || 'Elegant'));
+  }
+});
+
+function generateLocalMockTimeline(eventDate: string, eventType: string, theme: string) {
+  return {
+    tasks: [
+      {
+        title: `Establish ${theme} Budget & Vision`,
+        description: `Set up your MyDay Budget Planner with a clear outline of allocations for the ${theme} ${eventType} theme.`,
+        daysBefore: 30,
+        phase: 'planning',
+        linkedType: 'budget',
+        reminderDaysBefore: 2
+      },
+      {
+        title: `Draft Celebration Guest List`,
+        description: `Define your initial guest list limit matching the planned capacity of your desired venue layout.`,
+        daysBefore: 28,
+        phase: 'planning',
+        linkedType: 'none',
+        reminderDaysBefore: 1
+      },
+      {
+        title: `Book Core Vendors`,
+        description: `Browse and book premium verified Vendors (Venues, Caterers, and Photographers) matching the ${theme} aesthetic.`,
+        daysBefore: 21,
+        phase: 'booking',
+        linkedType: 'booking',
+        reminderDaysBefore: 3
+      },
+      {
+        title: `Design and Dispatch Custom Digital Invites`,
+        description: `Generate high-contrast MyDay digital invitations complete with RSVPs, dress code instructions, and directions.`,
+        daysBefore: 14,
+        phase: 'invitations',
+        linkedType: 'invitation',
+        reminderDaysBefore: 2
+      },
+      {
+        title: `Finalize Catering and Theme Decor Orders`,
+        description: `Coordinate with your booked caterer and decorators to lock in specific catering counts and decoration options.`,
+        daysBefore: 5,
+        phase: 'final_touches',
+        linkedType: 'booking',
+        reminderDaysBefore: 1
+      },
+      {
+        title: `Coordinate Surprise & Celebration Flow`,
+        description: `Create a brief timeline sequence of surprises, guest toast timings, and cake-cutting coordinates.`,
+        daysBefore: 3,
+        phase: 'final_touches',
+        linkedType: 'none',
+        reminderDaysBefore: 1
+      },
+      {
+        title: `Pre-event Walkthrough & Enjoyment!`,
+        description: `Ensure sound checks are ready and celebrate the ${eventType} under the gorgeous ${theme} atmosphere!`,
+        daysBefore: 0,
+        phase: 'day_of',
+        linkedType: 'none',
+        reminderDaysBefore: 0
+      }
+    ]
+  };
+}
+
+function generateLocalMockAIBudget(
+  budget: number,
+  eventType: string,
+  guestCount: number,
+  theme: string,
+  location: string
+) {
+  // Define base percentages based on Event Type
+  let percentages: { [key: string]: number } = {
+    'Event Halls': 25,
+    'Catering': 20,
+    'Decor': 12,
+    'Photography': 10,
+    'Cake': 8,
+    'MC': 6,
+    'DJ': 6,
+    'Makeup Artist': 5,
+    'Gift Shops': 4,
+    'Restaurants': 4,
+  };
+
+  // Adjust percentages dynamically based on eventType
+  const typeLower = eventType.toLowerCase();
+  if (typeLower.includes('dinner') || typeLower.includes('restaurant') || typeLower.includes('intimate')) {
+    percentages['Restaurants'] = 30;
+    percentages['Catering'] = 5;
+    percentages['Event Halls'] = 5;
+    percentages['Decor'] = 15;
+    percentages['MC'] = 5;
+    percentages['DJ'] = 5;
+    percentages['Photography'] = 12;
+    percentages['Cake'] = 10;
+    percentages['Makeup Artist'] = 8;
+    percentages['Gift Shops'] = 5;
+  } else if (typeLower.includes('club') || typeLower.includes('party') || typeLower.includes('dance')) {
+    percentages['DJ'] = 15;
+    percentages['MC'] = 10;
+    percentages['Event Halls'] = 20;
+    percentages['Catering'] = 15;
+    percentages['Decor'] = 10;
+    percentages['Restaurants'] = 3;
+    percentages['Photography'] = 8;
+    percentages['Cake'] = 7;
+    percentages['Makeup Artist'] = 6;
+    percentages['Gift Shops'] = 6;
+  } else if (typeLower.includes('outdoor') || typeLower.includes('garden') || typeLower.includes('picnic')) {
+    percentages['Decor'] = 20;
+    percentages['Event Halls'] = 10;
+    percentages['Catering'] = 25;
+    percentages['Photography'] = 12;
+    percentages['Cake'] = 8;
+    percentages['DJ'] = 7;
+    percentages['MC'] = 6;
+    percentages['Makeup Artist'] = 4;
+    percentages['Gift Shops'] = 4;
+    percentages['Restaurants'] = 4;
+  }
+
+  // Ensure sum is exactly 100%
+  const keys = Object.keys(percentages);
+  let sum = keys.reduce((acc, k) => acc + percentages[k], 0);
+  if (sum !== 100) {
+    const diff = 100 - sum;
+    percentages['Catering'] += diff; // adjust catering with the difference
+  }
+
+  const allocatedCategories = keys.map(key => {
+    const pct = percentages[key];
+    const cost = Math.round((budget * pct) / 100);
+    let description = '';
+
+    switch (key) {
+      case 'Event Halls':
+        description = `Allocated ${pct}% for reserving a premium hall matching your ${theme} theme in ${location}.`;
+        break;
+      case 'Catering':
+        description = `Premium food, refreshments and service catering for your estimated ${guestCount} guests.`;
+        break;
+      case 'Decor':
+        description = `Curated thematic styling and ambiance setups to match your ${theme} preference.`;
+        break;
+      case 'Photography':
+        description = `Professional portraits and live event coverage to capture the golden memories.`;
+        break;
+      case 'Cake':
+        description = `Custom-crafted multi-tier cake tailored to your celebration style.`;
+        break;
+      case 'MC':
+        description = `Elite event compere to handle crowd engagement and program flow smoothly.`;
+        break;
+      case 'DJ':
+        description = `Professional sound systems and curated sets to keep the energy high.`;
+        break;
+      case 'Makeup Artist':
+        description = `Full glam beauty session for the celebrant and close party.`;
+        break;
+      case 'Gift Shops':
+        description = `Personalized party favors and gifts for your special attendees.`;
+        break;
+      case 'Restaurants':
+        description = `Intimate dining or semi-private culinary experiences.`;
+        break;
+    }
+
+    return {
+      categoryName: key,
+      percentage: pct,
+      cost,
+      description
+    };
+  });
+
+  // Re-adjust cost to ensure absolute sum precision match to the user budget
+  let runningCostSum = allocatedCategories.reduce((acc, item) => acc + item.cost, 0);
+  if (runningCostSum !== budget) {
+    const diff = budget - runningCostSum;
+    allocatedCategories[0].cost += diff; // adjust first item
+  }
+
+  // Generate intelligent warnings
+  const warnings: string[] = [];
+  const costPerGuest = budget / (guestCount || 1);
+  
+  if (costPerGuest < 5000) {
+    warnings.push(`Tight Budget warning: Your budget averages ₦${Math.round(costPerGuest).toLocaleString()}/guest. Standard luxury catering averages ₦8,000/guest.`);
+  }
+  if (guestCount > 150 && percentages['Event Halls'] * budget / 100 < 300000) {
+    warnings.push(`Hall Budget Alert: ₦${Math.round(percentages['Event Halls'] * budget / 100).toLocaleString()} might be insufficient to book a 150+ capacity hall in prime locations.`);
+  }
+  if (budget < 100000) {
+    warnings.push(`Micro Budget constraint: Essential vendors (Photographer/Cake/Decor) may need to be boutique or micro-vendors.`);
+  }
+
+  if (warnings.length === 0) {
+    warnings.push(`Optimized budget: Your budget of ₦${budget.toLocaleString()} is extremely healthy for ${guestCount} guests (₦${Math.round(costPerGuest).toLocaleString()} per guest).`);
+  }
+
+  // Generate intelligent savings suggestions
+  const savingsSuggestions: string[] = [
+    `Consolidate Sound & MC: Look for a premium DJ who also provides high-quality crowd hype/compering services to save up to 15% on entertainment.`,
+    `Afternoon Soirée: Hosting your event between 2:00 PM and 5:00 PM usually reduces catering costs by 20%, as guests expect finger-foods (small chops) rather than full multi-course meals.`,
+    `Local Floral Accents: Request your Decor vendor to use in-season local foliage rather than imported fresh roses. This retains premium density while saving up to ₦100,000.`,
+    `Semi-Private Dining: For smaller guest counts, book a semi-private lounge area in a luxury restaurant instead of a full event hall. This completely waives the rental fee.`
+  ];
+
+  const explanation = `This premium budget strategy is optimized for your ${theme} ${eventType} in ${location}. We have front-loaded ${percentages['Catering']}% of the funds into Catering and ${percentages['Event Halls']}% into Venues to secure the fundamental pillars of guest comfort, while reserving an elegant ${percentages['Decor']}% for personalized ${theme} design features.`;
+
+  return {
+    explanation,
+    allocatedCategories,
+    warnings,
+    savingsSuggestions
   };
 }
 

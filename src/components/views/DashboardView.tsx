@@ -4,7 +4,7 @@ import {
   Search, Bell, Cake, Gift, Sparkles, Camera, Utensils, Music, 
   Heart, Calendar, ChevronRight, Plus, Wand2, Bookmark, Clock, 
   ArrowUpRight, Compass, X, AlertCircle, Smile, PartyPopper, CheckCircle,
-  CreditCard, Receipt, Download, FileText, ArrowLeft, Loader2
+  CreditCard, Receipt, Download, FileText, ArrowLeft, Loader2, Mail
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card, CardBody } from '../ui/Card';
@@ -12,7 +12,9 @@ import { User, BirthdayPlan } from '../../types';
 import { getBookings, updateBookingStatus, DBBooking } from '../../services/db_services';
 import { SAMPLE_VENDORS, getFirestoreBirthdayPlans, getLocalBirthdayPlans } from '../../services/db';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { TrendingUp, DollarSign } from 'lucide-react';
+import { TrendingUp, DollarSign, MessageSquare, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
+import { BookingTimeline } from '../ui/BookingTimeline';
+import { BookingChatModal } from '../ui/BookingChatModal';
 
 interface TimelineActivity {
   id: string;
@@ -167,6 +169,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [isProcessingPayment, setIsProcessingPayment] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<DBBooking | null>(null);
 
+  // Booking details drawer & action states
+  const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+  const [chatBooking, setChatBooking] = useState<DBBooking | null>(null);
+  const [isCancellingId, setIsCancellingId] = useState<string | null>(null);
+
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!window.confirm("Are you sure you want to cancel this reservation request? This action is irreversible.")) return;
+    setIsCancellingId(bookingId);
+    try {
+      await updateBookingStatus(bookingId, 'cancelled', 'unpaid');
+      setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, bookingStatus: 'cancelled' } : b));
+      showNotification?.("Your reservation request has been successfully cancelled.");
+    } catch (err) {
+      console.error("Failed to cancel booking:", err);
+      showNotification?.("Failed to cancel reservation request. Please try again.");
+    } finally {
+      setIsCancellingId(null);
+    }
+  };
+
   // Real-time birthday plans
   const [plans, setPlans] = useState<BirthdayPlan[]>([]);
   const [loadingPlans, setLoadingPlans] = useState<boolean>(true);
@@ -292,42 +314,42 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-white/[0.04] bg-gradient-to-b from-[#151421] to-[#111019] rounded-[22px] shadow-lg">
+        <Card className="border-neutral-200/80 dark:border-white/[0.04] bg-white dark:bg-zinc-900 rounded-[22px] shadow-sm">
           <CardBody className="p-6 flex items-center space-x-4">
-            <div className="w-12 h-12 bg-[#1C1A2D]/60 rounded-2xl flex items-center justify-center text-[#D6D3D1]">
-              <Receipt className="w-5 h-5 text-[#D6D3D1]/80" />
+            <div className="w-12 h-12 bg-[#6C4CF1]/10 dark:bg-[#1C1A2D]/60 rounded-2xl flex items-center justify-center text-[#6C4CF1] dark:text-[#D6D3D1]">
+              <Receipt className="w-5 h-5 text-[#6C4CF1]/85 dark:text-[#D6D3D1]/80" />
             </div>
             <div>
-              <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-[#A8A29E]">Total Booked Volume</p>
-              <h4 className="text-xl sm:text-[22px] font-display font-semibold text-[#F5F5F4] mt-1">
+              <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-neutral-500 dark:text-[#A8A29E]">Total Booked Volume</p>
+              <h4 className="text-xl sm:text-[22px] font-display font-semibold text-neutral-900 dark:text-[#F5F5F4] mt-1">
                 ₦{totalBooked.toLocaleString()}
               </h4>
             </div>
           </CardBody>
         </Card>
         
-        <Card className="border-white/[0.04] bg-gradient-to-b from-[#151421] to-[#111019] rounded-[22px] shadow-lg">
+        <Card className="border-neutral-200/80 dark:border-white/[0.04] bg-white dark:bg-zinc-900 rounded-[22px] shadow-sm">
           <CardBody className="p-6 flex items-center space-x-4">
-            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400">
-              <CheckCircle className="w-5 h-5 text-emerald-400/80" />
+            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <CheckCircle className="w-5 h-5 text-emerald-600/80 dark:text-emerald-400/80" />
             </div>
             <div>
-              <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-[#A8A29E]">Paid & Settled</p>
-              <h4 className="text-xl sm:text-[22px] font-display font-semibold text-emerald-400 mt-1">
+              <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-neutral-500 dark:text-[#A8A29E]">Paid & Settled</p>
+              <h4 className="text-xl sm:text-[22px] font-display font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                 ₦{paidAmount.toLocaleString()}
               </h4>
             </div>
           </CardBody>
         </Card>
 
-        <Card className="border-white/[0.04] bg-gradient-to-b from-[#151421] to-[#111019] rounded-[22px] shadow-lg">
+        <Card className="border-neutral-200/80 dark:border-white/[0.04] bg-white dark:bg-zinc-900 rounded-[22px] shadow-sm">
           <CardBody className="p-6 flex items-center space-x-4">
-            <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-400">
-              <Clock className="w-5 h-5 text-amber-400/80" />
+            <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <Clock className="w-5 h-5 text-amber-600/80 dark:text-amber-400/80" />
             </div>
             <div>
-              <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-[#A8A29E]">Outstanding Balances</p>
-              <h4 className="text-xl sm:text-[22px] font-display font-semibold text-amber-400 mt-1">
+              <p className="text-[10px] font-mono font-medium uppercase tracking-wider text-neutral-500 dark:text-[#A8A29E]">Outstanding Balances</p>
+              <h4 className="text-xl sm:text-[22px] font-display font-semibold text-amber-600 dark:text-amber-400 mt-1">
                 ₦{pendingAmount.toLocaleString()}
               </h4>
             </div>
@@ -340,9 +362,9 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
   const renderPaymentsList = (isLimit = false) => {
     if (loadingBookings) {
       return (
-        <div className="flex flex-col items-center justify-center py-12 bg-[#12111A] rounded-[22px] border border-white/[0.04] space-y-3">
+        <div className="flex flex-col items-center justify-center py-12 bg-white dark:bg-zinc-900 rounded-[22px] border border-neutral-200/80 dark:border-white/[0.04] space-y-3">
           <Loader2 className="w-7 h-7 text-[#6C4CF1] animate-spin" />
-          <p className="text-xs text-[#A8A29E] font-normal">Loading reservation ledger from Firestore...</p>
+          <p className="text-xs text-neutral-500 dark:text-[#A8A29E] font-normal">Loading reservation ledger from Firestore...</p>
         </div>
       );
     }
@@ -351,20 +373,20 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
 
     if (listToDisplay.length === 0) {
       return (
-        <div className="text-center py-12 bg-[#12111A] rounded-[22px] border border-dashed border-white/[0.06] p-8 flex flex-col items-center justify-center space-y-4">
-          <div className="w-14 h-14 bg-[#1C1A2D]/60 rounded-2xl flex items-center justify-center border border-white/[0.04]">
-            <CreditCard className="w-5 h-5 text-[#A8A29E]" />
+        <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-[22px] border border-dashed border-neutral-200/80 dark:border-white/[0.06] p-8 flex flex-col items-center justify-center space-y-4">
+          <div className="w-14 h-14 bg-neutral-100 dark:bg-[#1C1A2D]/60 rounded-2xl flex items-center justify-center border border-neutral-200 dark:border-white/[0.04]">
+            <CreditCard className="w-5 h-5 text-neutral-400 dark:text-[#A8A29E]" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-display font-semibold text-base sm:text-lg text-[#F5F5F4]">No active bookings found</h4>
-            <p className="text-sm text-[#D6D3D1] leading-relaxed max-w-sm mx-auto">
+            <h4 className="font-display font-semibold text-base sm:text-lg text-neutral-900 dark:text-[#F5F5F4]">No active bookings found</h4>
+            <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] leading-relaxed max-w-sm mx-auto">
               You haven't initiated any boutique vendor requests. Once you request availability, reservation invoices will appear here in real-time.
             </p>
           </div>
           <Button
             onClick={onBrowseVendors}
             variant="outline"
-            className="border-white/[0.08] hover:border-[#6C4CF1]/30 hover:text-[#B4A2FF] text-[#D6D3D1] text-xs px-5 py-2.5 rounded-xl transition-all duration-200"
+            className="border-neutral-200 dark:border-white/[0.08] hover:border-[#6C4CF1]/30 hover:text-[#6C4CF1] dark:hover:text-[#B4A2FF] text-neutral-600 dark:text-[#D6D3D1] text-xs px-5 py-2.5 rounded-xl transition-all duration-200"
           >
             Explore Bespoke Directory
           </Button>
@@ -381,109 +403,196 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
           const vendorImage = vendor?.imageUrl || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=400';
 
           return (
-            <Card key={booking.id} className="border-white/[0.04] bg-[#12111A] hover:bg-[#151421] hover:border-[#6C4CF1]/20 hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all duration-300 rounded-[20px] overflow-hidden">
-              <CardBody className="p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <Card key={booking.id} className="border-neutral-200/80 dark:border-white/[0.04] bg-white dark:bg-zinc-900 hover:border-[#6C4CF1]/20 dark:hover:border-[#6C4CF1]/30 hover:shadow-xs transition-all duration-300 rounded-[20px] overflow-hidden">
+              <CardBody className="p-6 sm:p-7 flex flex-col">
                 
-                {/* Left Block: Image & Basic Info */}
-                <div className="flex items-start sm:items-center space-x-5 flex-grow">
-                  
-                  {/* Vendor image - larger 72px */}
-                  <div className="w-[72px] h-[72px] rounded-[16px] overflow-hidden bg-[#1C1A2D] border border-white/[0.06] shrink-0 shadow-inner relative group">
-                    <img src={vendorImage} alt={vendorName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
-                  </div>
-                  
-                  {/* Info Column: Structured strictly as ordered */}
-                  <div className="space-y-1.5 flex-grow">
-                    {/* 1. Vendor Name */}
-                    <h4 className="text-lg sm:text-xl font-display font-semibold text-[#F5F5F4] tracking-tight">{vendorName}</h4>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 w-full">
+                  {/* Left Block: Image & Basic Info */}
+                  <div className="flex items-start sm:items-center space-x-5 flex-grow">
                     
-                    {/* 2. Category badge & Code */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="inline-flex items-center text-[10px] font-mono font-medium uppercase tracking-wider px-2.5 py-0.5 bg-[#6C4CF1]/10 text-[#B4A2FF] border border-[#6C4CF1]/15 rounded-md">
-                        {vendorCategory}
-                      </span>
-                      <span className="text-[10px] font-mono text-[#A8A29E]">
-                        INV-{booking.id?.toUpperCase().slice(0, 8) || 'PENDING'}
-                      </span>
+                    {/* Vendor image - larger 72px */}
+                    <div className="w-[72px] h-[72px] rounded-[16px] overflow-hidden bg-neutral-100 dark:bg-[#1C1A2D] border border-neutral-200 dark:border-white/[0.06] shrink-0 shadow-inner relative group">
+                      <img src={vendorImage} alt={vendorName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
                     </div>
-
-                    {/* 3 & 4. Booking Date & Reservation Status Badge */}
-                    <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs text-[#D6D3D1] font-sans mt-1">
-                      <span className="flex items-center font-normal">
-                        <Calendar className="w-4 h-4 mr-1.5 text-[#A8A29E]/80 shrink-0" />
-                        Date: <span className="font-semibold text-[#F5F5F4] ml-1">{new Date(booking.bookingDate).toLocaleDateString()}</span>
-                      </span>
-                      <span className="text-white/[0.08] hidden sm:inline">•</span>
-                      <span className="flex items-center font-normal">
-                        Status: 
-                        <span className={`ml-1.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-medium uppercase tracking-wider ${
-                          booking.bookingStatus === 'confirmed' 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15' 
-                            : booking.bookingStatus === 'pending'
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/15 animate-pulse'
-                            : 'bg-red-500/10 text-red-400 border border-red-500/15'
-                        }`}>
-                          {booking.bookingStatus}
+                    
+                    {/* Info Column: Structured strictly as ordered */}
+                    <div className="space-y-1.5 flex-grow">
+                      {/* 1. Vendor Name */}
+                      <h4 className="text-lg sm:text-xl font-display font-semibold text-neutral-900 dark:text-[#F5F5F4] tracking-tight">{vendorName}</h4>
+                      
+                      {/* 2. Category badge & Code */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center text-[10px] font-mono font-medium uppercase tracking-wider px-2.5 py-0.5 bg-[#6C4CF1]/10 text-[#6C4CF1] dark:text-[#B4A2FF] border border-[#6C4CF1]/15 dark:border-transparent rounded-md">
+                          {vendorCategory}
                         </span>
-                      </span>
+                        <span className="text-[10px] font-mono text-neutral-500 dark:text-[#A8A29E]">
+                          INV-{booking.id?.toUpperCase().slice(0, 8) || 'PENDING'}
+                        </span>
+                      </div>
+
+                      {/* 3 & 4. Booking Date & Reservation Status Badge */}
+                      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-xs text-neutral-600 dark:text-[#D6D3D1] font-sans mt-1">
+                        <span className="flex items-center font-normal">
+                          <Calendar className="w-4 h-4 mr-1.5 text-neutral-400 dark:text-[#A8A29E]/80 shrink-0" />
+                          Date: <span className="font-semibold text-neutral-800 dark:text-[#F5F5F4] ml-1">{new Date(booking.bookingDate).toLocaleDateString()}</span>
+                        </span>
+                        <span className="text-neutral-200 dark:text-white/[0.08] hidden sm:inline">•</span>
+                        <span className="flex items-center font-normal">
+                          Status: 
+                          <span className={`ml-1.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-medium uppercase tracking-wider ${
+                            booking.bookingStatus === 'completed'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15'
+                              : booking.bookingStatus === 'accepted' || booking.bookingStatus === 'confirmed' || booking.bookingStatus === 'in_progress'
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/15'
+                              : booking.bookingStatus === 'pending'
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/15 animate-pulse'
+                              : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/15'
+                          }`}>
+                            {booking.bookingStatus}
+                          </span>
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Right Block: Total, Payment Status Badge & Actions */}
-                <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-4 pt-5 md:pt-0 border-t md:border-t-0 border-white/[0.04] shrink-0">
-                  {/* 5. Invoice Total */}
-                  <div className="text-left md:text-right">
-                    <p className="text-[10px] font-mono uppercase font-medium text-[#A8A29E] tracking-wider">Invoice Total</p>
-                    <p className="text-xl sm:text-2xl font-display font-bold text-[#F5F5F4] mt-0.5">
-                      ₦{booking.totalAmount.toLocaleString()}
-                    </p>
-                  </div>
+                  {/* Right Block: Total, Payment Status Badge & Actions */}
+                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-4 pt-5 md:pt-0 border-t md:border-t-0 border-neutral-150 dark:border-white/[0.04] shrink-0">
+                    {/* 5. Invoice Total */}
+                    <div className="text-left md:text-right">
+                      <p className="text-[10px] font-mono uppercase font-medium text-neutral-500 dark:text-[#A8A29E] tracking-wider">Invoice Total</p>
+                      <p className="text-xl sm:text-2xl font-display font-bold text-neutral-900 dark:text-[#F5F5F4] mt-0.5">
+                        ₦{booking.totalAmount.toLocaleString()}
+                      </p>
+                    </div>
 
-                  {/* 6 & 7. Payment Status & Actions container */}
-                  <div className="flex items-center gap-3">
-                    {/* 6. Payment Status - elegant green outline and soft bg for paid */}
-                    {booking.paymentStatus === 'paid' ? (
-                      <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-500/5 text-emerald-400 border border-emerald-500/25 rounded-full text-xs font-medium shadow-sm shadow-emerald-500/5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>Paid</span>
-                      </div>
-                    ) : booking.paymentStatus === 'refunded' ? (
-                      <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-red-500/5 text-red-400 border border-red-500/25 rounded-full text-xs font-medium shadow-sm">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                        <span>Refunded</span>
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-amber-500/5 text-amber-400 border border-amber-500/25 rounded-full text-xs font-medium shadow-sm">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                        <span>Pending</span>
-                      </div>
-                    )}
-
-                    {/* 7. Actions */}
-                    <div className="flex items-center gap-2">
-                      {/* Invoice details trigger */}
-                      <button
-                        onClick={() => setSelectedInvoice(booking)}
-                        className="p-2.5 text-[#A8A29E] hover:text-[#B4A2FF] hover:bg-white/[0.04] rounded-xl transition-all duration-200 cursor-pointer border border-transparent hover:border-white/[0.04]"
-                        title="View & Download Invoice"
-                      >
-                        <FileText className="w-4.5 h-4.5" />
-                      </button>
-
-                      {/* Pay Now trigger */}
-                      {(booking.paymentStatus === 'unpaid' || booking.paymentStatus === 'partial') && (
-                        <Button
-                          onClick={() => setIsProcessingPayment(booking.id || null)}
-                          className="bg-[#6C4CF1] hover:bg-[#5B3ED6]/90 text-[#F5F5F4] px-4.5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider shadow-md transition-all duration-200 hover:-translate-y-0.5"
-                        >
-                          Pay Now
-                        </Button>
+                    {/* 6 & 7. Payment Status & Actions container */}
+                    <div className="flex items-center gap-3">
+                      {/* 6. Payment Status */}
+                      {booking.paymentStatus === 'paid' ? (
+                        <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/25 rounded-full text-xs font-medium shadow-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+                          <span>Paid</span>
+                        </div>
+                      ) : booking.paymentStatus === 'refunded' ? (
+                        <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-red-500/5 text-red-600 dark:text-red-400 border border-red-500/20 dark:border-red-500/25 rounded-full text-xs font-medium shadow-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-red-400" />
+                          <span>Refunded</span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-amber-500/5 text-amber-600 dark:text-amber-400 border border-amber-500/20 dark:border-amber-500/25 rounded-full text-xs font-medium shadow-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse" />
+                          <span>Pending</span>
+                        </div>
                       )}
+
+                      {/* 7. Actions */}
+                      <div className="flex items-center gap-2">
+                        {/* Invoice details trigger */}
+                        <button
+                          onClick={() => setSelectedInvoice(booking)}
+                          className="p-2.5 text-neutral-400 hover:text-[#6C4CF1] dark:text-[#A8A29E] dark:hover:text-[#B4A2FF] hover:bg-neutral-100 dark:hover:bg-white/[0.04] rounded-xl transition-all duration-200 cursor-pointer border border-transparent hover:border-neutral-200 dark:hover:border-white/[0.04]"
+                          title="View & Download Invoice"
+                        >
+                          <FileText className="w-4.5 h-4.5" />
+                        </button>
+
+                        {/* Expand/Collapse details trigger */}
+                        <button
+                          onClick={() => setExpandedBookingId(expandedBookingId === booking.id ? null : (booking.id || null))}
+                          className="p-2.5 text-neutral-400 hover:text-neutral-600 dark:text-[#A8A29E] dark:hover:text-[#B4A2FF] hover:bg-neutral-100 dark:hover:bg-white/[0.04] rounded-xl transition-all duration-200 cursor-pointer border border-transparent hover:border-neutral-200 dark:hover:border-white/[0.04]"
+                          title="View Curation Timeline"
+                        >
+                          {expandedBookingId === booking.id ? <ChevronUp className="w-4.5 h-4.5" /> : <ChevronDown className="w-4.5 h-4.5" />}
+                        </button>
+
+                        {/* Pay Now trigger */}
+                        {(booking.paymentStatus === 'unpaid' || booking.paymentStatus === 'partial') && (
+                          <Button
+                            onClick={() => setIsProcessingPayment(booking.id || null)}
+                            className="bg-[#6C4CF1] hover:bg-[#5B3ED6]/90 text-white dark:text-[#F5F5F4] px-4.5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                          >
+                            Pay Now
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* EXPANDED CELEBRATION MODERATION DRAWERS */}
+                {expandedBookingId === booking.id && (
+                  <div className="mt-6 pt-6 border-t border-neutral-150 dark:border-white/[0.04] space-y-6 w-full animate-fadeIn">
+                    
+                    {/* Visual Curation Progress timeline */}
+                    <div className="space-y-3.5">
+                      <h5 className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#B4A2FF]">Celebration Curation Pipeline</h5>
+                      <div className="bg-neutral-50 dark:bg-black/25 rounded-2xl p-5 border border-neutral-150 dark:border-white/[0.02]">
+                        <BookingTimeline bookingStatus={booking.bookingStatus} paymentStatus={booking.paymentStatus} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
+                      {/* Booking Metadata / Curation Notes */}
+                      <div className="space-y-4">
+                        <h5 className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#B4A2FF]">Curation Detail Matrix</h5>
+                        <div className="space-y-2.5 text-xs text-neutral-600 dark:text-[#D6D3D1]">
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="w-4 h-4 text-neutral-400 shrink-0" />
+                            <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-500">Delivery Domain:</span>
+                            <span className="font-semibold text-neutral-800 dark:text-[#F5F5F4]">{plans.find(p => p.id === booking.birthdayPlanId)?.city || 'Kwara State'}</span>
+                          </div>
+                          {booking.specialRequests && (
+                            <div className="bg-neutral-50 dark:bg-white/[0.02] p-3 rounded-xl border border-neutral-150 dark:border-white/[0.02] text-xs font-light leading-relaxed">
+                              <span className="font-semibold block text-[10px] uppercase tracking-wider text-neutral-500 mb-1">Patron Specifications:</span>
+                              "{booking.specialRequests}"
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Immediate Collaboration Suite */}
+                      <div className="space-y-4 flex flex-col justify-end">
+                        <h5 className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#B4A2FF] md:text-right">Immediate Workspace Options</h5>
+                        <div className="flex flex-wrap items-center gap-3 md:justify-end">
+                          
+                          {/* Chat Button */}
+                          <button
+                            onClick={() => setChatBooking(booking)}
+                            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#6C4CF1]/10 hover:bg-[#6C4CF1]/20 border border-[#6C4CF1]/20 hover:border-[#6C4CF1]/35 text-[#B4A2FF] text-xs font-bold rounded-xl transition-all hover:-translate-y-0.5 cursor-pointer shadow-sm"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            <span>Message Partner</span>
+                          </button>
+
+                          {/* Invoice PDF / download Receipt text trigger */}
+                          <button
+                            onClick={() => {
+                              setSelectedInvoice(booking);
+                              showNotification?.("Displaying full VIP voucher invoice receipt.");
+                            }}
+                            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-neutral-100 dark:bg-white/5 hover:bg-neutral-200 dark:hover:bg-white/10 border border-neutral-200 dark:border-white/[0.04] text-neutral-700 dark:text-[#F5F5F4] text-xs font-bold rounded-xl transition-all hover:-translate-y-0.5 cursor-pointer"
+                          >
+                            <Download className="w-4 h-4" />
+                            <span>Voucher Receipt</span>
+                          </button>
+
+                          {/* Cancellation trigger before accepted */}
+                          {booking.bookingStatus === 'pending' && (
+                            <button
+                              disabled={isCancellingId === booking.id}
+                              onClick={() => handleCancelBooking(booking.id || '')}
+                              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/35 text-red-500 dark:text-red-400 text-xs font-bold rounded-xl transition-all hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
+                            >
+                              <span>{isCancellingId === booking.id ? 'Processing...' : 'Cancel Request'}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
 
               </CardBody>
             </Card>
@@ -798,7 +907,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
   // Fully route payments layout when forceShowPayments is activated
   if (forceShowPayments) {
     return (
-      <div id="premium-payments-container" className="max-w-7xl mx-auto px-6 sm:px-8 md:px-10 py-8 sm:py-12 space-y-12 sm:space-y-16 text-[#F5F5F4] bg-[#09080F] rounded-[32px] border border-white/[0.04] p-8 sm:p-10 md:p-12 shadow-[0_32px_96px_rgba(0,0,0,0.8)] relative overflow-hidden font-sans">
+      <div id="premium-payments-container" className="max-w-7xl mx-auto px-6 sm:px-8 md:px-10 py-8 sm:py-12 space-y-12 sm:space-y-16 text-[#F5F5F4] bg-white/[0.05] backdrop-blur-[8px] rounded-[32px] border border-white/[0.04] p-8 sm:p-10 md:p-12 shadow-[0_32px_96px_rgba(0,0,0,0.8)] relative overflow-hidden font-sans">
         {/* Payments Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/[0.04] pb-8">
           <div className="space-y-2.5">
@@ -850,22 +959,22 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
   }
 
   return (
-    <div id="premium-dashboard-container" className="max-w-7xl mx-auto px-6 sm:px-8 md:px-10 py-8 sm:py-12 space-y-12 sm:space-y-16 lg:space-y-20 text-[#F5F5F4] bg-[#09080F] rounded-[32px] border border-white/[0.04] p-8 sm:p-10 md:p-12 shadow-[0_32px_96px_rgba(0,0,0,0.8)] relative overflow-hidden font-sans">
+    <div id="premium-dashboard-container" className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-10 space-y-10 sm:space-y-14 lg:space-y-16 text-neutral-900 dark:text-neutral-100 relative overflow-hidden font-sans">
       
       {/* 1. Hero Welcome Segment */}
       <div 
         id="dashboard-hero-banner"
-        className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#0E0D16] via-[#131124] to-[#0A0910] border border-white/[0.04] p-8 sm:p-12 md:p-16 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12"
+        className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#1C1A2D] via-[#12111A] to-[#0A0518] border border-neutral-200/20 dark:border-white/[0.04] p-8 sm:p-12 md:p-16 shadow-2xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12"
       >
         {/* Glow Spheres */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#6C4CF1]/8 rounded-full blur-3xl pointer-events-none -mr-24 -mt-24"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#F4B400]/4 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#6C4CF1]/12 rounded-full blur-3xl pointer-events-none -mr-24 -mt-24"></div>
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#F4B400]/6 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
         
         {/* Soft Premium Purple & Gold Gradient Glow directly behind content */}
-        <div className="absolute left-12 top-1/2 -translate-y-1/2 w-[400px] h-[300px] bg-gradient-to-tr from-[#6C4CF1]/10 to-[#F4B400]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
+        <div className="absolute left-12 top-1/2 -translate-y-1/2 w-[400px] h-[300px] bg-gradient-to-tr from-[#6C4CF1]/15 to-[#F4B400]/8 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
         <div className="space-y-5 sm:space-y-6 z-10 max-w-2xl relative">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-[#6C4CF1]/10 border border-[#6C4CF1]/15 text-[#B4A2FF] rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase backdrop-blur-xs">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-[#6C4CF1]/20 border border-[#6C4CF1]/30 text-[#B4A2FF] rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase backdrop-blur-xs">
             <Sparkles className="w-4 h-4 text-[#F4B400]/90 animate-spin" />
             <span>Premium Studio Membership</span>
           </div>
@@ -904,20 +1013,20 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         {/* Card 1: Saved Plans */}
         <Card 
           id="saved-plans-card"
-          className="border-white/[0.04] hover:border-[#6C4CF1]/20 hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group bg-gradient-to-b from-[#151421] to-[#111019] h-full rounded-[22px]"
+          className="border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 dark:hover:border-[#6C4CF1]/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group bg-white dark:bg-zinc-900 h-full rounded-[22px]"
           onClick={() => onNavigateTab('planner')}
         >
           <CardBody className="p-6 sm:p-7 lg:p-8 flex flex-col justify-between h-full space-y-4">
             <div>
-              <div className="w-11 h-11 bg-[#6C4CF1]/10 rounded-xl flex items-center justify-center text-[#B4A2FF] transition-all duration-300 group-hover:scale-105 mb-4">
-                <Calendar className="w-5 h-5 text-[#B4A2FF]/90" />
+              <div className="w-11 h-11 bg-[#6C4CF1]/10 rounded-xl flex items-center justify-center text-[#6C4CF1] dark:text-[#B4A2FF] transition-all duration-300 group-hover:scale-105 mb-4">
+                <Calendar className="w-5 h-5 text-[#6C4CF1] dark:text-[#B4A2FF]/90" />
               </div>
               <div>
-                <h3 className="font-display font-semibold text-[18px] sm:text-[19px] text-[#F5F5F4] flex items-center justify-between">
+                <h3 className="font-display font-semibold text-[18px] sm:text-[19px] text-neutral-900 dark:text-[#F5F5F4] flex items-center justify-between">
                   <span>Saved Plans</span>
-                  <ChevronRight className="w-4 h-4 text-[#A8A29E] group-hover:text-[#B4A2FF] group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-neutral-400 dark:text-[#A8A29E] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] group-hover:translate-x-0.5 transition-all" />
                 </h3>
-                <p className="text-xs sm:text-sm text-[#D6D3D1] font-normal leading-relaxed mt-2">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-[#D6D3D1] font-normal leading-relaxed mt-2">
                   View and manage your saved birthday plans.
                 </p>
               </div>
@@ -928,7 +1037,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         {/* Card 2: Upcoming Celebrations */}
         <Card 
           id="upcoming-celebrations-card"
-          className="border-white/[0.04] hover:border-[#6C4CF1]/20 hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group bg-gradient-to-b from-[#151421] to-[#111019] h-full rounded-[22px]"
+          className="border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 dark:hover:border-[#6C4CF1]/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group bg-white dark:bg-zinc-900 h-full rounded-[22px]"
           onClick={() => onNavigateTab('planner')}
         >
           <CardBody className="p-6 sm:p-7 lg:p-8 flex flex-col justify-between h-full space-y-4">
@@ -937,11 +1046,11 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                 <Clock className="w-5 h-5 text-[#F4B400]/90" />
               </div>
               <div>
-                <h3 className="font-display font-semibold text-[18px] sm:text-[19px] text-[#F5F5F4] flex items-center justify-between">
+                <h3 className="font-display font-semibold text-[18px] sm:text-[19px] text-neutral-900 dark:text-[#F5F5F4] flex items-center justify-between">
                   <span>Upcoming Celebrations</span>
-                  <ChevronRight className="w-4 h-4 text-[#A8A29E] group-hover:text-[#B4A2FF] group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-neutral-400 dark:text-[#A8A29E] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] group-hover:translate-x-0.5 transition-all" />
                 </h3>
-                <p className="text-xs sm:text-sm text-[#D6D3D1] font-normal leading-relaxed mt-2">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-[#D6D3D1] font-normal leading-relaxed mt-2">
                   See birthdays you've planned and upcoming reminders.
                 </p>
               </div>
@@ -952,20 +1061,20 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         {/* Card 3: Favorite Vendors */}
         <Card 
           id="favorite-vendors-card"
-          className="border-white/[0.04] hover:border-[#6C4CF1]/20 hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group bg-gradient-to-b from-[#151421] to-[#111019] h-full rounded-[22px]"
+          className="border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 dark:hover:border-[#6C4CF1]/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group bg-white dark:bg-zinc-900 h-full rounded-[22px]"
           onClick={() => onNavigateTab('vendors')}
         >
           <CardBody className="p-6 sm:p-7 lg:p-8 flex flex-col justify-between h-full space-y-4">
             <div>
-              <div className="w-11 h-11 bg-rose-500/10 rounded-xl flex items-center justify-center text-rose-400 transition-all duration-300 group-hover:scale-105 mb-4">
-                <Heart className="w-5 h-5 fill-rose-500/5 text-rose-400/90" />
+              <div className="w-11 h-11 bg-rose-500/10 rounded-xl flex items-center justify-center text-rose-500 dark:text-rose-400 transition-all duration-300 group-hover:scale-105 mb-4">
+                <Heart className="w-5 h-5 fill-rose-500/5 text-rose-500 dark:text-rose-400/90" />
               </div>
               <div>
-                <h3 className="font-display font-semibold text-[18px] sm:text-[19px] text-[#F5F5F4] flex items-center justify-between">
+                <h3 className="font-display font-semibold text-[18px] sm:text-[19px] text-neutral-900 dark:text-[#F5F5F4] flex items-center justify-between">
                   <span>Favorite Vendors</span>
-                  <ChevronRight className="w-4 h-4 text-[#A8A29E] group-hover:text-[#B4A2FF] group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-neutral-400 dark:text-[#A8A29E] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] group-hover:translate-x-0.5 transition-all" />
                 </h3>
-                <p className="text-xs sm:text-sm text-[#D6D3D1] font-normal leading-relaxed mt-2">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-[#D6D3D1] font-normal leading-relaxed mt-2">
                   Quick access to your trusted vendors.
                 </p>
               </div>
@@ -976,22 +1085,22 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         {/* Card 4: AI Suggestions */}
         <Card 
           id="ai-suggestions-card"
-          className="border-white/[0.04] hover:border-[#6C4CF1]/20 hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group bg-gradient-to-b from-[#151421] to-[#111019] relative overflow-hidden h-full rounded-[22px]"
+          className="border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 dark:hover:border-[#6C4CF1]/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group bg-white dark:bg-zinc-900 relative overflow-hidden h-full rounded-[22px]"
           onClick={() => setActiveSuggestionModal(true)}
         >
           {/* subtle gold corner glow */}
           <div className="absolute top-0 right-0 w-16 h-16 bg-[#F4B400]/5 rounded-full blur-md"></div>
           <CardBody className="p-6 sm:p-7 lg:p-8 flex flex-col justify-between h-full space-y-4">
             <div>
-              <div className="w-11 h-11 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-400 transition-all duration-300 group-hover:scale-105 mb-4">
-                <Wand2 className="w-5 h-5 text-amber-400/90" />
+              <div className="w-11 h-11 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500 dark:text-amber-400 transition-all duration-300 group-hover:scale-105 mb-4">
+                <Wand2 className="w-5 h-5 text-amber-500 dark:text-amber-400/90" />
               </div>
               <div>
-                <h3 className="font-display font-semibold text-[18px] sm:text-[19px] text-[#F5F5F4] flex items-center justify-between">
+                <h3 className="font-display font-semibold text-[18px] sm:text-[19px] text-neutral-900 dark:text-[#F5F5F4] flex items-center justify-between">
                   <span>AI Suggestions</span>
-                  <ChevronRight className="w-4 h-4 text-[#A8A29E] group-hover:text-[#B4A2FF] group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-4 h-4 text-neutral-400 dark:text-[#A8A29E] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] group-hover:translate-x-0.5 transition-all" />
                 </h3>
-                <p className="text-xs sm:text-sm text-[#D6D3D1] font-normal leading-relaxed mt-2">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-[#D6D3D1] font-normal leading-relaxed mt-2">
                   Personalized birthday ideas generated by AI.
                 </p>
               </div>
@@ -1005,23 +1114,23 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
       <div id="budget-analytics-section" className="space-y-6 pt-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-[#F5F5F4] tracking-tight flex items-center gap-2.5">
+            <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-neutral-900 dark:text-[#F5F5F4] tracking-tight flex items-center gap-2.5">
               <TrendingUp className="w-6 h-6 text-[#6C4CF1] opacity-90" />
               <span>Budget & Expense Orchestration</span>
             </h3>
-            <p className="text-sm sm:text-base text-[#D6D3D1] leading-relaxed font-normal">
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
               Visualize your planned category allocations against actual reservation ledger items in real-time.
             </p>
           </div>
           
           {/* Plan selector if multiple plans exist */}
           {plans.length > 0 && (
-            <div className="flex items-center space-x-2 bg-[#151421] border border-white/[0.04] p-1.5 rounded-xl self-start sm:self-auto shadow-sm">
-              <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-[#A8A29E] pl-2">Select Plan:</span>
+            <div className="flex items-center space-x-2 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] p-1.5 rounded-xl self-start sm:self-auto shadow-xs">
+              <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-neutral-500 dark:text-[#A8A29E] pl-2">Select Plan:</span>
               <select
                 value={selectedPlanId}
                 onChange={(e) => setSelectedPlanId(e.target.value)}
-                className="bg-[#12111A] text-xs text-[#F5F5F4] font-medium outline-none cursor-pointer px-3 py-1.5 rounded-lg border border-white/[0.06] focus:border-[#6C4CF1]/40 font-sans"
+                className="bg-neutral-50 dark:bg-[#12111A] text-xs text-neutral-800 dark:text-[#F5F5F4] font-medium outline-none cursor-pointer px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-white/[0.06] focus:border-[#6C4CF1]/40 font-sans"
               >
                 {plans.map(p => (
                   <option key={p.id} value={p.id} className="bg-[#12111A] text-[#F5F5F4]">
@@ -1034,13 +1143,13 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         </div>
 
         {plans.length === 0 ? (
-          <Card className="border-white/[0.04] p-8 sm:p-12 text-center bg-[#12111A] rounded-[22px]">
+          <Card className="border-neutral-200/80 dark:border-white/[0.04] p-8 sm:p-12 text-center bg-white dark:bg-zinc-900 rounded-[22px]">
             <CardBody className="flex flex-col items-center justify-center space-y-4 max-w-md mx-auto">
-              <div className="w-16 h-16 bg-[#6C4CF1]/10 rounded-full flex items-center justify-center text-[#B4A2FF]">
+              <div className="w-16 h-16 bg-[#6C4CF1]/10 rounded-full flex items-center justify-center text-[#6C4CF1] dark:text-[#B4A2FF]">
                 <DollarSign className="w-8 h-8" />
               </div>
-              <h4 className="font-display font-semibold text-[18px] sm:text-[20px] text-[#F5F5F4]">No active budget model found</h4>
-              <p className="text-sm sm:text-base text-[#D6D3D1] leading-relaxed font-normal">
+              <h4 className="font-display font-semibold text-[18px] sm:text-[20px] text-neutral-900 dark:text-[#F5F5F4]">No active budget model found</h4>
+              <p className="text-sm sm:text-base text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
                 Once you generate or custom-model an AI birthday plan, your interactive budget allocation and ledger breakdowns will auto-render here.
               </p>
               <Button onClick={onPlanBirthday} variant="primary" className="bg-[#6C4CF1] hover:bg-[#5B3ED6]/90 font-semibold text-xs uppercase tracking-wider rounded-xl">
@@ -1057,12 +1166,12 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
             const totalPlannedNGN = chartData.filter(d => d.name !== 'Unallocated Balance').reduce((sum, d) => sum + d.value, 0);
             
             return (
-              <Card className="border-white/[0.04] overflow-hidden bg-[#12111A] rounded-[24px] shadow-lg">
-                <CardBody className="p-8 sm:p-10 lg:p-12">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              <Card className="border-neutral-200/80 dark:border-white/[0.04] overflow-hidden bg-white dark:bg-zinc-900 rounded-[24px] shadow-sm">
+                <CardBody className="p-6 sm:p-8 lg:p-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
                     
                     {/* Left/Center Column: Recharts Donut Chart */}
-                    <div className="lg:col-span-5 flex flex-col items-center justify-center relative bg-[#171624] p-6 rounded-[22px] border border-white/[0.04]">
+                    <div className="lg:col-span-5 flex flex-col items-center justify-center relative bg-neutral-50 dark:bg-white/[0.02] p-6 rounded-[22px] border border-neutral-200/60 dark:border-white/[0.04]">
                       <div className="w-full h-[260px] relative flex items-center justify-center">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
@@ -1091,8 +1200,8 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                                 ];
                               }}
                               contentStyle={{ 
-                                backgroundColor: '#12111A', 
-                                border: '1px solid rgba(255, 255, 255, 0.08)', 
+                                backgroundColor: '#12111A',
+                                border: '1px solid rgba(255, 255, 255, 0.12)', 
                                 borderRadius: '12px',
                                 color: '#F5F5F4',
                                 fontSize: '12px',
@@ -1105,34 +1214,34 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                         
                         {/* Inside Donut Text Center */}
                         <div className="absolute flex flex-col items-center justify-center text-center">
-                          <span className="text-[10px] font-mono font-medium text-[#A8A29E] uppercase tracking-widest">Total Budget</span>
-                          <span className="text-2xl sm:text-[28px] font-display font-semibold text-[#F5F5F4] leading-tight">
+                          <span className="text-[10px] font-mono font-medium text-neutral-500 dark:text-[#A8A29E] uppercase tracking-widest">Total Budget</span>
+                          <span className="text-2xl sm:text-[28px] font-display font-semibold text-neutral-900 dark:text-[#F5F5F4] leading-tight">
                             ₦{totalNGN.toLocaleString()}
                           </span>
-                          <span className="text-[10px] font-mono font-medium text-[#B4A2FF] mt-0.5">
+                          <span className="text-[10px] font-mono font-medium text-[#6C4CF1] dark:text-[#B4A2FF] mt-0.5">
                             NGN
                           </span>
                         </div>
                       </div>
 
                       {/* Summary Metrics */}
-                      <div className="grid grid-cols-2 gap-4 w-full border-t border-white/[0.06] pt-5 mt-3 text-center">
+                      <div className="grid grid-cols-2 gap-4 w-full border-t border-neutral-200 dark:border-white/[0.06] pt-5 mt-3 text-center">
                         <div>
-                          <p className="text-[10px] font-mono font-medium text-[#A8A29E] uppercase tracking-wider">Booked Services</p>
-                          <p className="text-sm sm:text-base font-semibold text-emerald-400 font-mono mt-0.5">₦{totalSpentNGN.toLocaleString()}</p>
+                          <p className="text-[10px] font-mono font-medium text-neutral-500 dark:text-[#A8A29E] uppercase tracking-wider">Booked Services</p>
+                          <p className="text-sm sm:text-base font-semibold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">₦{totalSpentNGN.toLocaleString()}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-mono font-medium text-[#A8A29E] uppercase tracking-wider">Estimated Remaining</p>
-                          <p className="text-sm sm:text-base font-semibold text-[#B4A2FF] font-mono mt-0.5">₦{Math.max(0, totalPlannedNGN - totalSpentNGN).toLocaleString()}</p>
+                          <p className="text-[10px] font-mono font-medium text-neutral-500 dark:text-[#A8A29E] uppercase tracking-wider">Estimated Remaining</p>
+                          <p className="text-sm sm:text-base font-semibold text-[#6C4CF1] dark:text-[#B4A2FF] font-mono mt-0.5">₦{Math.max(0, totalPlannedNGN - totalSpentNGN).toLocaleString()}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Right Column: Detailed Breakdown Ledger */}
                     <div className="lg:col-span-7 space-y-6">
-                      <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-                        <h4 className="font-display font-semibold text-base sm:text-lg text-[#F5F5F4]">Bespoke Expense Breakdown</h4>
-                        <span className="text-[10px] font-mono font-medium bg-[#6C4CF1]/10 text-[#B4A2FF] px-2.5 py-1 rounded-md border border-white/[0.04]">
+                      <div className="flex items-center justify-between border-b border-neutral-200 dark:border-white/[0.06] pb-4">
+                        <h4 className="font-display font-semibold text-base sm:text-lg text-neutral-900 dark:text-[#F5F5F4]">Bespoke Expense Breakdown</h4>
+                        <span className="text-[10px] font-mono font-medium bg-neutral-100 dark:bg-[#6C4CF1]/10 text-neutral-600 dark:text-[#B4A2FF] px-2.5 py-1 rounded-md border border-neutral-200 dark:border-white/[0.04]">
                           Base Currency: NGN (₦)
                         </span>
                       </div>
@@ -1141,14 +1250,14 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                         {chartData.map((item, idx) => {
                           if (item.name === 'Unallocated Balance') {
                             return (
-                              <div key={idx} className="flex items-center justify-between p-4 bg-[#12111A]/80 rounded-xl border border-dashed border-white/[0.04]">
+                              <div key={idx} className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-white/[0.05] rounded-xl border border-dashed border-neutral-200/60 dark:border-white/[0.04]">
                                 <div className="flex items-center space-x-3">
-                                  <div className="w-3 h-3 rounded-full bg-[#322B54] border border-white/[0.04]" />
-                                  <span className="text-sm font-medium text-[#D6D3D1]">Unallocated Reserve</span>
+                                  <div className="w-3 h-3 rounded-full bg-neutral-300 dark:bg-[#322B54] border border-neutral-200 dark:border-white/[0.04]" />
+                                  <span className="text-sm font-medium text-neutral-600 dark:text-[#D6D3D1]">Unallocated Reserve</span>
                                 </div>
                                 <div className="text-right">
-                                  <span className="text-sm font-semibold text-[#F5F5F4] font-mono">₦{item.value.toLocaleString()}</span>
-                                  <span className="text-[10px] font-mono font-medium text-[#A8A29E] block mt-0.5">{item.percentage}% of total</span>
+                                  <span className="text-sm font-semibold text-neutral-900 dark:text-[#F5F5F4] font-mono">₦{item.value.toLocaleString()}</span>
+                                  <span className="text-[10px] font-mono font-medium text-neutral-500 dark:text-[#A8A29E] block mt-0.5">{item.percentage}% of total</span>
                                 </div>
                               </div>
                             );
@@ -1157,24 +1266,24 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                           return (
                             <div 
                               key={idx} 
-                              className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:bg-white/[0.01] ${
+                              className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:bg-neutral-100/50 dark:hover:bg-white/[0.01] ${
                                 item.isBooked 
                                   ? 'border-emerald-500/15 bg-emerald-500/[0.02] hover:bg-emerald-500/[0.04]' 
-                                  : 'border-white/[0.04] bg-[#0A0910]/80 hover:bg-white/[0.02]'
+                                  : 'border-neutral-200 dark:border-white/[0.04] bg-neutral-50 dark:bg-white/[0.05] hover:bg-neutral-100 dark:hover:bg-white/[0.02]'
                               }`}
                             >
                               <div className="flex items-center space-x-3.5">
                                 <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                                 <div>
                                   <div className="flex items-center space-x-2">
-                                    <span className="text-sm sm:text-base font-semibold text-[#F5F5F4]">{item.name}</span>
+                                    <span className="text-sm sm:text-base font-semibold text-neutral-900 dark:text-[#F5F5F4]">{item.name}</span>
                                     {item.isBooked && (
-                                      <span className="inline-flex items-center text-[9px] font-mono font-medium uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 px-1.5 py-0.5 rounded">
+                                      <span className="inline-flex items-center text-[9px] font-mono font-medium uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15 px-1.5 py-0.5 rounded">
                                         Booked
                                       </span>
                                     )}
                                   </div>
-                                  <span className="text-xs text-[#A8A29E] font-normal font-sans mt-0.5 block">
+                                  <span className="text-xs text-neutral-500 dark:text-[#A8A29E] font-normal font-sans mt-0.5 block">
                                     {item.isBooked 
                                       ? `Actual reservation: ₦${item.bookedAmount.toLocaleString()}` 
                                       : `Target budget threshold limit`
@@ -1183,10 +1292,10 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                                 </div>
                               </div>
                               <div className="text-right">
-                                <span className="text-sm sm:text-base font-semibold text-[#F5F5F4] font-mono">
+                                <span className="text-sm sm:text-base font-semibold text-neutral-900 dark:text-[#F5F5F4] font-mono">
                                   ₦{item.value.toLocaleString()}
                                 </span>
-                                <span className="text-[10px] font-mono font-medium text-[#A8A29E] block mt-0.5">
+                                <span className="text-[10px] font-mono font-medium text-neutral-500 dark:text-[#A8A29E] block mt-0.5">
                                   {item.percentage}% of budget
                                 </span>
                               </div>
@@ -1197,12 +1306,12 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
 
                       {/* Exceedance alert warning banner */}
                       {totalPlannedNGN > totalNGN && (
-                        <div className="p-4 bg-red-500/5 rounded-xl border border-red-500/10 text-red-200 flex items-start space-x-3">
-                          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                        <div className="p-4 bg-red-500/5 rounded-xl border border-red-500/10 text-red-700 dark:text-red-200 flex items-start space-x-3">
+                          <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
                           <div>
-                            <h5 className="text-sm font-semibold text-[#F5F5F4]">Planned Category Expenses Exceed Budget</h5>
-                            <p className="text-xs text-[#D6D3D1] font-sans mt-1 leading-relaxed">
-                              Your current selections or allocations total <strong className="text-white">₦{totalPlannedNGN.toLocaleString()}</strong>, which is over your target of <strong className="text-white">₦{totalNGN.toLocaleString()}</strong>. Consider adjusting parameters in the Celebrations Studio.
+                            <h5 className="text-sm font-semibold text-neutral-900 dark:text-[#F5F5F4]">Planned Category Expenses Exceed Budget</h5>
+                            <p className="text-xs text-neutral-600 dark:text-[#D6D3D1] font-sans mt-1 leading-relaxed">
+                              Your current selections or allocations total <strong className="text-neutral-900 dark:text-white">₦{totalPlannedNGN.toLocaleString()}</strong>, which is over your target of <strong className="text-neutral-900 dark:text-white">₦{totalNGN.toLocaleString()}</strong>. Consider adjusting parameters in the Celebrations Studio.
                             </p>
                           </div>
                         </div>
@@ -1221,24 +1330,38 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
       <div id="quick-actions-section" className="space-y-6 pt-2">
         <div className="flex items-center justify-between">
           <div className="space-y-1.5">
-            <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-[#F5F5F4] tracking-tight">Quick Actions</h3>
-            <p className="text-sm sm:text-base text-[#D6D3D1] leading-relaxed font-normal">Direct pathways to design components of your perfect day.</p>
+            <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-neutral-900 dark:text-[#F5F5F4] tracking-tight">Quick Actions</h3>
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">Direct pathways to design components of your perfect day.</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-5">
           
           {/* Action 1: Plan Birthday */}
           <button
             id="qa-plan-birthday"
             onClick={onPlanBirthday}
-            className="flex flex-col items-center justify-center text-center p-5 bg-[#12111A] border border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+            className="flex flex-col items-center justify-center text-center p-5 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
           >
-            <div className="w-10 h-10 bg-[#6C4CF1]/10 rounded-xl flex items-center justify-center text-[#B4A2FF] mb-3 group-hover:scale-105 transition-transform">
-              <Cake className="w-5 h-5 text-[#B4A2FF]" />
+            <div className="w-10 h-10 bg-[#6C4CF1]/10 rounded-xl flex items-center justify-center text-[#6C4CF1] dark:text-[#B4A2FF] mb-3 group-hover:scale-105 transition-transform">
+              <Cake className="w-5 h-5 text-[#6C4CF1] dark:text-[#B4A2FF]" />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#D6D3D1] group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-[#D6D3D1] group-hover:text-[#6C4CF1] dark:group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
               Plan Birthday
+            </span>
+          </button>
+
+          {/* Action: Design Invitation */}
+          <button
+            id="qa-invitation-generator"
+            onClick={() => onNavigateTab('invitation-generator')}
+            className="flex flex-col items-center justify-center text-center p-5 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] hover:border-amber-500/30 rounded-[18px] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+          >
+            <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500 mb-3 group-hover:scale-105 transition-transform">
+              <Mail className="w-5 h-5 text-amber-500" />
+            </div>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-[#D6D3D1] group-hover:text-[#6C4CF1] dark:group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
+              Design Cards
             </span>
           </button>
 
@@ -1250,12 +1373,12 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               desc: "Get tailored gift list proposals mapped dynamically to your budget, celebrant demographics, and interest graph tags.",
               icon: <Gift className="w-8 h-8 text-[#F4B400]" />
             })}
-            className="flex flex-col items-center justify-center text-center p-5 bg-[#12111A] border border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+            className="flex flex-col items-center justify-center text-center p-5 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
           >
-            <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-400 mb-3 group-hover:scale-105 transition-transform">
-              <Gift className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500 mb-3 group-hover:scale-105 transition-transform">
+              <Gift className="w-5 h-5 text-amber-500" />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#D6D3D1] group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-[#D6D3D1] group-hover:text-[#6C4CF1] dark:group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
               Gift Ideas
             </span>
           </button>
@@ -1268,12 +1391,12 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               desc: "Explore stunning balloon arches, backdrops, custom dinnerware sets, and dynamic color palettes designed by pro planners.",
               icon: <Sparkles className="w-8 h-8 text-[#6C4CF1]" />
             })}
-            className="flex flex-col items-center justify-center text-center p-5 bg-[#12111A] border border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+            className="flex flex-col items-center justify-center text-center p-5 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
           >
-            <div className="w-10 h-10 bg-[#6C4CF1]/10 rounded-xl flex items-center justify-center text-[#B4A2FF] mb-3 group-hover:scale-105 transition-transform">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-10 h-10 bg-[#6C4CF1]/10 rounded-xl flex items-center justify-center text-[#6C4CF1] dark:text-[#B4A2FF] mb-3 group-hover:scale-105 transition-transform">
+              <Sparkles className="w-5 h-5 text-[#6C4CF1] dark:text-[#B4A2FF]" />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#D6D3D1] group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-[#D6D3D1] group-hover:text-[#6C4CF1] dark:group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
               Decorations
             </span>
           </button>
@@ -1284,14 +1407,14 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
             onClick={() => setActiveQuickActionModal({
               title: "Photography Matcher",
               desc: "Instantly match with top local event photographers, photo booth agencies, and videographers matching your date.",
-              icon: <Camera className="w-8 h-8 text-sky-400" />
+              icon: <Camera className="w-8 h-8 text-sky-500" />
             })}
-            className="flex flex-col items-center justify-center text-center p-5 bg-[#12111A] border border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+            className="flex flex-col items-center justify-center text-center p-5 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
           >
-            <div className="w-10 h-10 bg-sky-500/10 rounded-xl flex items-center justify-center text-sky-400 mb-3 group-hover:scale-105 transition-transform">
-              <Camera className="w-5 h-5" />
+            <div className="w-10 h-10 bg-sky-500/10 rounded-xl flex items-center justify-center text-sky-500 mb-3 group-hover:scale-105 transition-transform">
+              <Camera className="w-5 h-5 text-sky-500" />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#D6D3D1] group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-[#D6D3D1] group-hover:text-[#6C4CF1] dark:group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
               Photography
             </span>
           </button>
@@ -1302,14 +1425,14 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
             onClick={() => setActiveQuickActionModal({
               title: "Premium Caterers & Venues",
               desc: "Discover unique dining experiences, food trucks, mixologist bars, and gourmet sit-down menus tailored for celebrations.",
-              icon: <Utensils className="w-8 h-8 text-emerald-400" />
+              icon: <Utensils className="w-8 h-8 text-emerald-500" />
             })}
-            className="flex flex-col items-center justify-center text-center p-5 bg-[#12111A] border border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+            className="flex flex-col items-center justify-center text-center p-5 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
           >
-            <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-105 transition-transform">
-              <Utensils className="w-5 h-5" />
+            <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 mb-3 group-hover:scale-105 transition-transform">
+              <Utensils className="w-5 h-5 text-emerald-500" />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#D6D3D1] group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-[#D6D3D1] group-hover:text-[#6C4CF1] dark:group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
               Restaurants
             </span>
           </button>
@@ -1320,14 +1443,14 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
             onClick={() => setActiveQuickActionModal({
               title: "Entertainment & Live Events",
               desc: "From professional DJs and saxophonists to magical illusionists and custom trivia hosts, find the heartbeat of your party.",
-              icon: <Music className="w-8 h-8 text-indigo-400" />
+              icon: <Music className="w-8 h-8 text-indigo-500" />
             })}
-            className="flex flex-col items-center justify-center text-center p-5 bg-[#12111A] border border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-[0_12px_32px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+            className="flex flex-col items-center justify-center text-center p-5 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] hover:border-[#6C4CF1]/30 rounded-[18px] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
           >
-            <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400 mb-3 group-hover:scale-105 transition-transform">
-              <Music className="w-5 h-5" />
+            <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500 mb-3 group-hover:scale-105 transition-transform">
+              <Music className="w-5 h-5 text-indigo-500" />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#D6D3D1] group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600 dark:text-[#D6D3D1] group-hover:text-[#6C4CF1] dark:group-hover:text-[#F5F5F4] transition-colors font-sans mt-1">
               Entertainment
             </span>
           </button>
@@ -1339,17 +1462,17 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-[#F5F5F4] tracking-tight flex items-center gap-2.5">
+            <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-neutral-900 dark:text-[#F5F5F4] tracking-tight flex items-center gap-2.5">
               <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-[#6C4CF1] shrink-0 opacity-90" />
               <span>Real-time Bookings & Payments</span>
             </h3>
-            <p className="text-sm sm:text-base text-[#D6D3D1] leading-relaxed font-normal">
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
               Active vendor reservations and digital invoices linked directly to your Firestore database.
             </p>
           </div>
           <button 
             onClick={() => onNavigateTab('payments')}
-            className="text-xs sm:text-sm font-semibold text-[#A692FF] hover:text-[#B4A2FF] transition-colors flex items-center self-start sm:self-center shrink-0 uppercase tracking-wider"
+            className="text-xs sm:text-sm font-semibold text-[#6C4CF1] dark:text-[#A692FF] hover:text-[#5B3ED6] dark:hover:text-[#B4A2FF] transition-colors flex items-center self-start sm:self-center shrink-0 uppercase tracking-wider"
           >
             <span>View All Payments</span>
             <ChevronRight className="w-4 h-4 ml-1" />
@@ -1366,8 +1489,8 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1.5">
-              <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-[#F5F5F4] tracking-tight">Activity Stream</h3>
-              <p className="text-sm sm:text-base text-[#D6D3D1] leading-relaxed font-normal">
+              <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-neutral-900 dark:text-[#F5F5F4] tracking-tight">Activity Stream</h3>
+              <p className="text-sm sm:text-base text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
                 {activityTab === 'recent' 
                   ? "Keep track of the details you've finalized recently." 
                   : "Track booking milestones and secure your event timeline."}
@@ -1375,13 +1498,13 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
             </div>
             
             {/* Elegant Tab Switcher */}
-            <div className="flex p-1 bg-[#151421] border border-white/[0.04] rounded-xl self-start sm:self-center shrink-0 shadow-sm">
+            <div className="flex p-1 bg-white dark:bg-zinc-900 border border-neutral-200/80 dark:border-white/[0.04] rounded-xl self-start sm:self-center shrink-0 shadow-xs">
               <button
                 onClick={() => setActivityTab('recent')}
                 className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
                   activityTab === 'recent' 
-                    ? 'bg-[#6C4CF1] text-[#F5F5F4] shadow-md' 
-                    : 'text-[#A8A29E] hover:text-[#F5F5F4]'
+                    ? 'bg-[#6C4CF1] text-[#F5F5F4] shadow-xs' 
+                    : 'text-neutral-500 dark:text-[#A8A29E] hover:text-neutral-900 dark:hover:text-[#F5F5F4]'
                 }`}
               >
                 Recent History
@@ -1390,17 +1513,17 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                 onClick={() => setActivityTab('upcoming')}
                 className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold tracking-wide transition-all duration-200 cursor-pointer flex items-center space-x-1.5 ${
                   activityTab === 'upcoming' 
-                    ? 'bg-[#6C4CF1] text-[#F5F5F4] shadow-md' 
-                    : 'text-[#A8A29E] hover:text-[#F5F5F4]'
+                    ? 'bg-[#6C4CF1] text-[#F5F5F4] shadow-xs' 
+                    : 'text-neutral-500 dark:text-[#A8A29E] hover:text-neutral-900 dark:hover:text-[#F5F5F4]'
                 }`}
               >
                 <span>Upcoming Timeline</span>
-                <span className="bg-white/10 text-[#F5F5F4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">4</span>
+                <span className="bg-white/10 dark:bg-white/10 text-[#F5F5F4] text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">4</span>
               </button>
             </div>
           </div>
 
-          <Card id="recent-activity-card" className="border-white/[0.04] shadow-lg bg-[#12111A] rounded-[22px]">
+          <Card id="recent-activity-card" className="border-neutral-200/80 dark:border-white/[0.04] shadow-sm bg-white dark:bg-zinc-900 rounded-[22px]">
             <CardBody className="p-0">
               <AnimatePresence mode="wait">
                 {activityTab === 'recent' ? (
@@ -1421,21 +1544,21 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                       <div className="flex items-start gap-4 sm:gap-6 group relative">
                         {/* Connected Icon */}
                         <div className="relative z-10 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-400 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-emerald-500/30">
-                            <Cake className="w-5 h-5 text-emerald-400" />
+                          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:border-emerald-500/30">
+                            <Cake className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                           </div>
-                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#12111A]" />
+                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0E0D16]" />
                         </div>
 
                         {/* Card Content with beautiful hover animation */}
-                        <div className="flex-grow space-y-2 bg-[#100F17]/80 hover:bg-[#151421] rounded-[18px] p-5 border border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="flex-grow space-y-2 bg-neutral-50 dark:bg-white/[0.05] hover:bg-neutral-100 dark:hover:bg-white/[0.08] rounded-[18px] p-5 border border-neutral-200 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 font-sans">
-                            <h4 className="text-[15px] sm:text-[16px] font-semibold text-[#F5F5F4] group-hover:text-[#B4A2FF] transition-colors leading-snug">
+                            <h4 className="text-[15px] sm:text-[16px] font-semibold text-neutral-900 dark:text-[#F5F5F4] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] transition-colors leading-snug">
                               ✓ Birthday Plan Created
                             </h4>
-                            <span className="text-xs font-mono font-medium text-[#A8A29E] shrink-0">12m ago</span>
+                            <span className="text-xs font-mono font-medium text-neutral-500 dark:text-[#A8A29E] shrink-0">12m ago</span>
                           </div>
-                          <p className="text-sm text-[#D6D3D1] leading-relaxed font-normal">
+                          <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
                             Successfully designed a whimsical pastel balloon setup and vintage game lounge for Jordan's 6th party.
                           </p>
                         </div>
@@ -1445,21 +1568,21 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                       <div className="flex items-start gap-4 sm:gap-6 group relative">
                         {/* Connected Icon */}
                         <div className="relative z-10 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/15 flex items-center justify-center text-rose-400 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-rose-500/30">
-                            <Bookmark className="w-5 h-5 text-rose-400" />
+                          <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/15 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:border-rose-500/30">
+                            <Bookmark className="w-5 h-5 text-rose-600 dark:text-rose-400" />
                           </div>
-                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-400 border-2 border-[#12111A]" />
+                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-400 border-2 border-white dark:border-[#0E0D16]" />
                         </div>
 
                         {/* Card Content with beautiful hover animation */}
-                        <div className="flex-grow space-y-2 bg-[#100F17]/80 hover:bg-[#151421] rounded-[18px] p-5 border border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="flex-grow space-y-2 bg-neutral-50 dark:bg-white/[0.05] hover:bg-neutral-100 dark:hover:bg-white/[0.08] rounded-[18px] p-5 border border-neutral-200 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 font-sans">
-                            <h4 className="text-[15px] sm:text-[16px] font-semibold text-[#F5F5F4] group-hover:text-[#B4A2FF] transition-colors leading-snug">
+                            <h4 className="text-[15px] sm:text-[16px] font-semibold text-neutral-900 dark:text-[#F5F5F4] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] transition-colors leading-snug">
                               ✓ Vendor Saved
                             </h4>
-                            <span className="text-xs font-mono font-medium text-[#A8A29E] shrink-0">2h ago</span>
+                            <span className="text-xs font-mono font-medium text-neutral-500 dark:text-[#A8A29E] shrink-0">2h ago</span>
                           </div>
-                          <p className="text-sm text-[#D6D3D1] leading-relaxed font-normal">
+                          <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
                             Added 'Sugar&Spice Patisserie' to your favorites list for artisanal dessert catering.
                           </p>
                         </div>
@@ -1469,21 +1592,21 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                       <div className="flex items-start gap-4 sm:gap-6 group relative">
                         {/* Connected Icon */}
                         <div className="relative z-10 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/15 flex items-center justify-center text-sky-400 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-sky-500/30">
-                            <CheckCircle className="w-5 h-5 text-sky-400" />
+                          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/15 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:border-sky-500/30">
+                            <CheckCircle className="w-5 h-5 text-sky-600 dark:text-sky-400" />
                           </div>
-                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-sky-400 border-2 border-[#12111A]" />
+                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-sky-400 border-2 border-white dark:border-[#0E0D16]" />
                         </div>
 
                         {/* Card Content with beautiful hover animation */}
-                        <div className="flex-grow space-y-2 bg-[#100F17]/80 hover:bg-[#151421] rounded-[18px] p-5 border border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="flex-grow space-y-2 bg-neutral-50 dark:bg-white/[0.05] hover:bg-neutral-100 dark:hover:bg-white/[0.08] rounded-[18px] p-5 border border-neutral-200 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 font-sans">
-                            <h4 className="text-[15px] sm:text-[16px] font-semibold text-[#F5F5F4] group-hover:text-[#B4A2FF] transition-colors leading-snug">
+                            <h4 className="text-[15px] sm:text-[16px] font-semibold text-neutral-900 dark:text-[#F5F5F4] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] transition-colors leading-snug">
                               ✓ Booking Confirmed
                             </h4>
-                            <span className="text-xs font-mono font-medium text-[#A8A29E] shrink-0">1d ago</span>
+                            <span className="text-xs font-mono font-medium text-neutral-500 dark:text-[#A8A29E] shrink-0">1d ago</span>
                           </div>
-                          <p className="text-sm text-[#D6D3D1] leading-relaxed font-normal">
+                          <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
                             Boutique photo studio reservation finalized and secured for Jordan's upcoming milestone.
                           </p>
                         </div>
@@ -1493,21 +1616,21 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                       <div className="flex items-start gap-4 sm:gap-6 group relative">
                         {/* Connected Icon */}
                         <div className="relative z-10 shrink-0">
-                          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/15 flex items-center justify-center text-amber-400 shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:border-amber-500/30">
-                            <PartyPopper className="w-5 h-5 text-amber-400" />
+                          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/15 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-xs transition-all duration-300 group-hover:scale-105 group-hover:border-amber-500/30">
+                            <PartyPopper className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                           </div>
-                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-amber-500 border-2 border-[#12111A]" />
+                          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-amber-500 border-2 border-white dark:border-[#0E0D16]" />
                         </div>
 
                         {/* Card Content with beautiful hover animation */}
-                        <div className="flex-grow space-y-2 bg-[#100F17]/80 hover:bg-[#151421] rounded-[18px] p-5 border border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                        <div className="flex-grow space-y-2 bg-neutral-50 dark:bg-white/[0.05] hover:bg-neutral-100 dark:hover:bg-white/[0.08] rounded-[18px] p-5 border border-neutral-200 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-300">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 font-sans">
-                            <h4 className="text-[15px] sm:text-[16px] font-semibold text-[#F5F5F4] group-hover:text-[#B4A2FF] transition-colors leading-snug">
+                            <h4 className="text-[15px] sm:text-[16px] font-semibold text-neutral-900 dark:text-[#F5F5F4] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] transition-colors leading-snug">
                               ✓ Celebration Completed
                             </h4>
-                            <span className="text-xs font-mono font-medium text-[#A8A29E] shrink-0">2d ago</span>
+                            <span className="text-xs font-mono font-medium text-neutral-500 dark:text-[#A8A29E] shrink-0">2d ago</span>
                           </div>
-                          <p className="text-sm text-[#D6D3D1] leading-relaxed font-normal">
+                          <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
                             The Neon Glow arcade celebration was hosted successfully. Rate your experience!
                           </p>
                         </div>
@@ -1516,13 +1639,13 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                     </div>
 
                     {/* View Full Activity Button */}
-                    <div className="mt-8 flex justify-center border-t border-white/[0.04] pt-6">
+                    <div className="mt-8 flex justify-center border-t border-neutral-200 dark:border-white/[0.04] pt-6">
                       <Button
                         onClick={() => {
                           showNotification("Opening complete activity logs...");
                         }}
                         variant="outline"
-                        className="w-full sm:w-auto border-white/[0.06] hover:border-[#6C4CF1]/30 hover:text-[#B4A2FF] text-[#D6D3D1] text-xs px-6 py-3 rounded-xl transition-all duration-250 hover:-translate-y-0.5 font-semibold uppercase tracking-wider shadow-sm flex items-center justify-center space-x-1.5 cursor-pointer"
+                        className="w-full sm:w-auto border-neutral-200 dark:border-white/[0.06] hover:border-[#6C4CF1]/30 text-neutral-600 dark:text-[#D6D3D1] hover:text-[#6C4CF1] dark:hover:text-[#B4A2FF] text-xs px-6 py-3 rounded-xl transition-all duration-250 hover:-translate-y-0.5 font-semibold uppercase tracking-wider shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer bg-white dark:bg-zinc-900"
                       >
                         <span>View Full Activity</span>
                         <ChevronRight className="w-4 h-4" />
@@ -1550,7 +1673,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                         let IconComponent = Clock;
                         let statusColor = 'bg-[#A8A29E]';
                         let statusText = 'Scheduled';
-                        let statusBadgeClass = 'bg-[#151421] text-[#A8A29E] border-white/[0.04]';
+                        let statusBadgeClass = 'bg-neutral-100 dark:bg-[#151421] text-neutral-500 dark:text-[#A8A29E] border-neutral-200 dark:border-white/[0.04]';
                         
                         if (activity.type === 'ai') {
                           IconComponent = Wand2;
@@ -1565,15 +1688,15 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                         if (activity.status === 'completed') {
                           statusColor = 'bg-emerald-500';
                           statusText = 'Verified';
-                          statusBadgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15';
+                          statusBadgeClass = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15';
                         } else if (activity.status === 'action_required') {
                           statusColor = 'bg-amber-500';
                           statusText = 'Action Needed';
-                          statusBadgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/15';
+                          statusBadgeClass = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/15';
                         } else if (activity.status === 'scheduled') {
                           statusColor = 'bg-[#6C4CF1]';
                           statusText = 'Confirmed';
-                          statusBadgeClass = 'bg-[#6C4CF1]/10 text-[#B4A2FF] border border-[#6C4CF1]/15';
+                          statusBadgeClass = 'bg-[#6C4CF1]/10 text-[#6C4CF1] dark:text-[#B4A2FF] border border-[#6C4CF1]/15';
                         }
 
                         return (
@@ -1583,14 +1706,14 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                           >
                             {/* Left timeline badge/indicator */}
                             <div className="relative z-10 shrink-0">
-                              <div className="w-10 h-10 rounded-xl bg-[#0B0A10] border border-white/[0.06] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-[#6C4CF1]/30 shadow-sm">
-                                <IconComponent className={`w-5 h-5 ${isExpanded ? 'text-[#B4A2FF]' : 'text-[#D6D3D1]'}`} />
+                              <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#0B0A10] border border-neutral-200 dark:border-white/[0.06] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-[#6C4CF1]/30 shadow-xs">
+                                <IconComponent className={`w-5 h-5 ${isExpanded ? 'text-[#6C4CF1] dark:text-[#B4A2FF]' : 'text-neutral-500 dark:text-[#D6D3D1]'}`} />
                               </div>
-                              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ${statusColor} border-2 border-[#12111A]`} />
+                              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ${statusColor} border-2 border-white dark:border-[#0E0D16]`} />
                             </div>
 
                             {/* Right content box */}
-                            <div className="flex-grow space-y-2 bg-[#100F17]/80 hover:bg-[#151421] rounded-[18px] p-4.5 sm:p-5 border border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-sm transition-all duration-300">
+                            <div className="flex-grow space-y-2 bg-neutral-50 dark:bg-white/[0.05] hover:bg-neutral-100 dark:hover:bg-white/[0.08] rounded-[18px] p-4.5 sm:p-5 border border-neutral-200 dark:border-white/[0.04] hover:border-[#6C4CF1]/20 shadow-xs transition-all duration-300">
                               {/* Header triggers expansion */}
                               <button
                                 onClick={() => setExpandedActivityId(isExpanded ? null : activity.id)}
@@ -1598,30 +1721,30 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                               >
                                 <div className="space-y-1">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <h4 className="text-[15px] sm:text-[16px] font-semibold text-[#F5F5F4] group-hover:text-[#B4A2FF] transition-colors leading-snug">
+                                    <h4 className="text-[15px] sm:text-[16px] font-semibold text-neutral-900 dark:text-[#F5F5F4] group-hover:text-[#6C4CF1] dark:group-hover:text-[#B4A2FF] transition-colors leading-snug">
                                       {activity.title}
                                     </h4>
                                     <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-md border ${statusBadgeClass}`}>
                                       {statusText}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-[#A8A29E] font-medium font-mono">
+                                  <p className="text-xs text-neutral-500 dark:text-[#A8A29E] font-medium font-mono">
                                     {activity.subtitle}
                                   </p>
                                 </div>
                                 
-                                <div className="flex items-center gap-2 text-[#A8A29E] shrink-0">
+                                <div className="flex items-center gap-2 text-neutral-500 dark:text-[#A8A29E] shrink-0">
                                   <span className="text-xs font-mono font-semibold hidden sm:inline-block">
                                     {activity.date} • {activity.time}
                                   </span>
-                                  <div className="w-6 h-6 rounded-md bg-[#12111A] border border-white/[0.04] flex items-center justify-center transition-transform duration-300">
-                                    <ChevronRight className={`w-3.5 h-3.5 text-[#F5F5F4] transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                                  <div className="w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-neutral-200 dark:border-white/[0.04] flex items-center justify-center transition-transform duration-300">
+                                    <ChevronRight className={`w-3.5 h-3.5 text-neutral-800 dark:text-[#F5F5F4] transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
                                   </div>
                                 </div>
                               </button>
 
                               {/* Mobile Friendly Date Tag */}
-                              <div className="sm:hidden text-[11px] font-mono font-medium text-[#A8A29E]">
+                              <div className="sm:hidden text-[11px] font-mono font-medium text-neutral-500 dark:text-[#A8A29E]">
                                 {activity.date} • {activity.time}
                               </div>
 
@@ -1635,19 +1758,19 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                                     transition={{ duration: 0.25, ease: 'easeInOut' }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="pt-3.5 border-t border-white/[0.04] space-y-4">
-                                      <p className="text-sm text-[#D6D3D1] leading-relaxed font-normal">
+                                    <div className="pt-3.5 border-t border-neutral-200 dark:border-white/[0.04] space-y-4">
+                                      <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">
                                         {activity.description}
                                       </p>
 
                                       {/* Key Value Details Block */}
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                         {activity.details.map((detail, idx) => (
-                                          <div key={idx} className="bg-[#12111A]/60 border border-white/[0.04] rounded-xl p-3 flex flex-col justify-between">
-                                            <span className="text-[9px] uppercase font-semibold tracking-wider text-[#A8A29E]">
+                                          <div key={idx} className="bg-neutral-100 dark:bg-white/[0.05] border border-neutral-200 dark:border-white/[0.04] rounded-xl p-3 flex flex-col justify-between">
+                                            <span className="text-[9px] uppercase font-semibold tracking-wider text-neutral-500 dark:text-[#A8A29E]">
                                               {detail.label}
                                             </span>
-                                            <span className="text-xs sm:text-sm font-medium text-[#F5F5F4] leading-relaxed truncate mt-0.5">
+                                            <span className="text-xs sm:text-sm font-medium text-neutral-900 dark:text-[#F5F5F4] leading-relaxed truncate mt-0.5">
                                               {detail.value}
                                             </span>
                                           </div>
@@ -1663,8 +1786,8 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                                               onClick={() => act.onClick(showNotification)}
                                               className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                                                 act.primary 
-                                                  ? 'bg-[#6C4CF1] hover:bg-[#5B3ED6]/90 text-[#F5F5F4] shadow-sm hover:-translate-y-0.5' 
-                                                  : 'bg-white/[0.03] hover:bg-white/[0.06] text-[#D6D3D1] border border-white/[0.04]'
+                                                  ? 'bg-[#6C4CF1] hover:bg-[#5B3ED6]/90 text-[#F5F5F4] shadow-xs hover:-translate-y-0.5' 
+                                                  : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] text-neutral-700 dark:text-[#D6D3D1] border border-neutral-200 dark:border-white/[0.04]'
                                               }`}
                                             >
                                               {act.label}
@@ -1691,28 +1814,28 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
         {/* Right 1 Col: Quick Inspiration / Tips */}
         <div className="space-y-6">
           <div className="space-y-1.5">
-            <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-[#F5F5F4] tracking-tight">Studio Tips</h3>
-            <p className="text-sm sm:text-base text-[#D6D3D1] leading-relaxed font-normal">Curated planning insights.</p>
+            <h3 className="text-2xl sm:text-3xl md:text-[30px] font-display font-bold text-neutral-900 dark:text-[#F5F5F4] tracking-tight">Studio Tips</h3>
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-[#D6D3D1] leading-relaxed font-normal">Curated planning insights.</p>
           </div>
 
-          <Card id="studio-tips-card" className="border-white/[0.04] bg-gradient-to-b from-[#12111A] to-[#0A0910] rounded-[20px] shadow-2xl relative overflow-hidden group">
+          <Card id="studio-tips-card" className="border-neutral-200 dark:border-white/[0.04] bg-white dark:bg-zinc-900 rounded-[20px] shadow-sm relative overflow-hidden group">
             {/* Soft decorative background glow */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-amber-500/15 transition-all duration-500" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#6C4CF1]/5 rounded-full blur-[40px] pointer-events-none" />
 
             <CardBody className="p-6 sm:p-7 space-y-6">
               {/* Header with AI icon & Gold accent */}
-              <div className="flex items-center justify-between border-b border-white/[0.04] pb-4">
+              <div className="flex items-center justify-between border-b border-neutral-200 dark:border-white/[0.04] pb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-sm shadow-amber-500/5">
-                    <Sparkles className="w-5 h-5 text-amber-400" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-sm shadow-amber-500/5">
+                    <Sparkles className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-widest font-bold text-[#B4A2FF]">AI Studio Assistant</span>
-                    <h4 className="text-base font-semibold text-[#F5F5F4] leading-none mt-0.5">Smart Recommendations</h4>
+                    <span className="text-[10px] font-mono uppercase tracking-widest font-bold text-[#6C4CF1] dark:text-[#B4A2FF]">AI Studio Assistant</span>
+                    <h4 className="text-base font-semibold text-neutral-900 dark:text-[#F5F5F4] leading-none mt-0.5">Smart Recommendations</h4>
                   </div>
                 </div>
-                <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/15 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                <span className="text-[9px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/15 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
                   Active
                 </span>
               </div>
@@ -1720,33 +1843,33 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               {/* Elegant cards containing tips */}
               <div className="space-y-4">
                 {/* Tip 1 */}
-                <div className="p-4 bg-[#151421]/60 border border-white/[0.04] rounded-[16px] hover:border-amber-500/20 hover:bg-[#151421]/80 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group/tip flex gap-3">
+                <div className="p-4 bg-neutral-50 dark:bg-white/[0.05] border border-neutral-200 dark:border-white/[0.04] rounded-[16px] hover:border-amber-500/20 dark:hover:bg-white/[0.08] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group/tip flex gap-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 mt-1.5 shadow-[0_0_8px_rgba(244,180,0,0.5)]" />
                   <div className="space-y-1">
-                    <p className="text-[10px] font-mono text-amber-400 uppercase tracking-wider font-semibold">Catering & Photography</p>
-                    <p className="text-sm text-[#D6D3D1] group-hover/tip:text-[#F5F5F4] transition-colors leading-relaxed font-normal">
+                    <p className="text-[10px] font-mono text-amber-600 dark:text-amber-400 uppercase tracking-wider font-semibold">Catering & Photography</p>
+                    <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] group-hover/tip:text-neutral-900 dark:group-hover/tip:text-[#F5F5F4] transition-colors leading-relaxed font-normal">
                       Book photographers 4–6 weeks before birthdays.
                     </p>
                   </div>
                 </div>
 
                 {/* Tip 2 */}
-                <div className="p-4 bg-[#151421]/60 border border-white/[0.04] rounded-[16px] hover:border-[#6C4CF1]/25 hover:bg-[#151421]/80 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group/tip flex gap-3">
+                <div className="p-4 bg-neutral-50 dark:bg-white/[0.05] border border-neutral-200 dark:border-white/[0.04] rounded-[16px] hover:border-[#6C4CF1]/25 dark:hover:bg-white/[0.08] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group/tip flex gap-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#6C4CF1] shrink-0 mt-1.5 shadow-[0_0_8px_rgba(108,76,241,0.5)]" />
                   <div className="space-y-1">
-                    <p className="text-[10px] font-mono text-[#B4A2FF] uppercase tracking-wider font-semibold">Local Demand Spike</p>
-                    <p className="text-sm text-[#D6D3D1] group-hover/tip:text-[#F5F5F4] transition-colors leading-relaxed font-normal">
+                    <p className="text-[10px] font-mono text-[#6C4CF1] dark:text-[#B4A2FF] uppercase tracking-wider font-semibold">Local Demand Spike</p>
+                    <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] group-hover/tip:text-neutral-900 dark:group-hover/tip:text-[#F5F5F4] transition-colors leading-relaxed font-normal">
                       Popular venues in Kwara are filling quickly.
                     </p>
                   </div>
                 </div>
 
                 {/* Tip 3 */}
-                <div className="p-4 bg-[#151421]/60 border border-white/[0.04] rounded-[16px] hover:border-emerald-500/25 hover:bg-[#151421]/80 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group/tip flex gap-3">
+                <div className="p-4 bg-neutral-50 dark:bg-white/[0.05] border border-neutral-200 dark:border-white/[0.04] rounded-[16px] hover:border-emerald-500/25 dark:hover:bg-white/[0.08] hover:shadow-xs hover:-translate-y-0.5 transition-all duration-300 group/tip flex gap-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 mt-1.5 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                   <div className="space-y-1">
-                    <p className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider font-semibold">Scheduling Optimization</p>
-                    <p className="text-sm text-[#D6D3D1] group-hover/tip:text-[#F5F5F4] transition-colors leading-relaxed font-normal">
+                    <p className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-semibold">Scheduling Optimization</p>
+                    <p className="text-sm text-neutral-600 dark:text-[#D6D3D1] group-hover/tip:text-neutral-900 dark:group-hover/tip:text-[#F5F5F4] transition-colors leading-relaxed font-normal">
                       AI recommends planning weekends early.
                     </p>
                   </div>
@@ -1758,7 +1881,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                 onClick={() => {
                   showNotification("Analyzing historical data to synthesize deeper custom birthday advice...");
                 }}
-                className="w-full py-3 bg-[#151421] hover:bg-[#6C4CF1] border border-white/[0.04] hover:border-[#6C4CF1]/20 rounded-xl text-xs font-semibold text-[#D6D3D1] hover:text-[#F5F5F4] transition-all duration-300 hover:shadow-[0_4px_12px_rgba(108,76,241,0.2)] text-center cursor-pointer font-sans tracking-wide uppercase"
+                className="w-full py-3 bg-neutral-100 hover:bg-[#6C4CF1] dark:bg-white/[0.05] border border-neutral-200 dark:border-white/[0.04] hover:border-transparent rounded-xl text-xs font-semibold text-neutral-600 dark:text-[#D6D3D1] hover:text-[#F5F5F4] transition-all duration-300 text-center cursor-pointer font-sans tracking-wide uppercase"
               >
                 Explore More Tips
               </button>
@@ -1785,7 +1908,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-xl bg-[#12111A] rounded-[24px] p-6 md:p-8 shadow-2xl space-y-6 z-10 border border-white/[0.08] max-h-[90vh] overflow-y-auto"
+              className="relative w-full max-w-xl bg-slate-950/95 backdrop-blur-[16px] rounded-[24px] p-6 md:p-8 shadow-2xl space-y-6 z-10 border border-white/[0.08] max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setActiveSuggestionModal(false)}
@@ -1809,7 +1932,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
 
               <div className="space-y-4">
                 {aiThemes.map((theme, i) => (
-                  <div key={theme.title} className="p-4 bg-[#0A0910]/75 border border-white/[0.04] rounded-[16px] hover:border-[#6C4CF1]/30 transition-all">
+                  <div key={theme.title} className="p-4 bg-white/[0.05] backdrop-blur-[8px] border border-white/[0.04] rounded-[16px] hover:border-[#6C4CF1]/30 transition-all">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-semibold text-[#F5F5F4]">{theme.title}</h4>
                       <span className="text-[9px] font-mono bg-[#6C4CF1]/10 text-[#B4A2FF] border border-[#6C4CF1]/15 px-2 py-0.5 rounded-full font-semibold">{theme.ageGroup}</span>
@@ -1858,7 +1981,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-md bg-[#12111A] rounded-[24px] p-6 shadow-2xl text-center space-y-6 z-10 border border-white/[0.08] max-h-[90vh] overflow-y-auto"
+              className="relative w-full max-w-md bg-slate-950/95 backdrop-blur-[16px] rounded-[24px] p-6 shadow-2xl text-center space-y-6 z-10 border border-white/[0.08] max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setActiveQuickActionModal(null)}
@@ -1867,7 +1990,7 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="mx-auto w-14 h-14 bg-[#0A0910] border border-white/[0.04] rounded-2xl flex items-center justify-center">
+              <div className="mx-auto w-14 h-14 bg-white/[0.05] backdrop-blur-[8px] border border-white/[0.04] rounded-2xl flex items-center justify-center">
                 {activeQuickActionModal.icon}
               </div>
 
@@ -1925,6 +2048,27 @@ TOTAL AMOUNT: NGN ${(booking.totalAmount * 1.175).toLocaleString()}
       {/* Checkout Modal */}
       <AnimatePresence>
         {isProcessingPayment && renderCheckoutModal()}
+      </AnimatePresence>
+
+      {/* Chat Workspace modal */}
+      <AnimatePresence>
+        {chatBooking && (
+          <BookingChatModal
+            isOpen={!!chatBooking}
+            onClose={() => setChatBooking(null)}
+            bookingId={chatBooking.id || ''}
+            bookingTitle={(() => {
+              const vendor = SAMPLE_VENDORS.find(v => v.id === chatBooking.vendorId);
+              return `Secure Workspace with ${vendor?.name || 'Bespoke Partner'}`;
+            })()}
+            currentUser={{
+              uid: user?.uid || 'guest-patron',
+              displayName: user?.displayName || 'Bespoke Patron',
+              email: user?.email || 'patron@myday.com'
+            }}
+            currentRole="customer"
+          />
+        )}
       </AnimatePresence>
 
     </div>

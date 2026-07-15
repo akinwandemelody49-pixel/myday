@@ -16,13 +16,13 @@ export const Card: React.FC<CardProps> = ({
   hoverEffect = false,
   variant = 'default',
 }) => {
-  const baseStyle = 'rounded-[20px] overflow-hidden bg-white dark:bg-[#0E0D16] text-neutral-800 dark:text-neutral-200 transition-all duration-300';
+  const baseStyle = 'rounded-[20px] overflow-hidden bg-white/80 dark:bg-white/[0.05] backdrop-blur-[8px] text-neutral-800 dark:text-neutral-200 transition-all duration-300';
   
   const variants = {
-    default: 'border border-neutral-100 dark:border-white/[0.04] shadow-xs',
-    luxury: 'border border-gold-200/40 dark:border-gold-500/20 bg-gradient-to-br from-white to-gold-50/10 dark:from-[#0E0D16] dark:to-gold-950/5 shadow-md shadow-gold-500/2',
+    default: 'border border-neutral-100/80 dark:border-white/[0.04] shadow-xs',
+    luxury: 'border border-gold-200/40 dark:border-gold-500/20 bg-gradient-to-br from-white to-gold-50/10 dark:from-white/[0.05] dark:to-gold-950/5 shadow-md shadow-gold-500/2 dark:backdrop-blur-[8px]',
     outline: 'border border-neutral-200 dark:border-white/[0.08]',
-    flat: 'bg-neutral-50 dark:bg-neutral-900 border border-transparent',
+    flat: 'bg-neutral-50/50 dark:bg-white/[0.03] border border-transparent dark:backdrop-blur-[8px]',
   };
 
   const isClickable = !!onClick;

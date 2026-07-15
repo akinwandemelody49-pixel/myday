@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, Calendar, LogOut, LayoutDashboard, Store, Menu, X, 
   User as UserIcon, Cake, Heart, ChevronRight, Settings, Bell, Search,
-  CreditCard, Briefcase, Sun, Moon
+  CreditCard, Briefcase, Sun, Moon, Mail, DollarSign, Clock
 } from 'lucide-react';
 import { User } from '../../types';
 
@@ -89,6 +89,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         description: 'Manage your celebrations'
       },
       {
+        id: 'budget-planner',
+        label: 'AI Budget Planner',
+        icon: <DollarSign className="w-5 h-5 text-emerald-500" />,
+        description: 'Smart expense allocations'
+      },
+      {
+        id: 'celebration-timeline',
+        label: 'AI Celebration Timeline',
+        icon: <Clock className="w-5 h-5 text-indigo-500" />,
+        description: 'Personalized interactive check track'
+      },
+      {
         id: 'vendors',
         label: 'Explore Vendors',
         icon: <Store className="w-5 h-5" />,
@@ -99,6 +111,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         label: 'Payment Status',
         icon: <CreditCard className="w-5 h-5" />,
         description: 'Track active bookings'
+      },
+      {
+        id: 'invitation-generator',
+        label: 'Invitation Studio',
+        icon: <Mail className="w-5 h-5 text-amber-500" />,
+        description: 'Design beautiful cards with AI'
+      },
+      {
+        id: 'checkout',
+        label: 'Checkout & Pay',
+        icon: <CreditCard className="w-5 h-5 text-amber-500 animate-pulse" />,
+        description: 'Complete your luxury booking'
       },
       {
         id: 'vendor-onboarding',
@@ -208,29 +232,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Theme Toggle Button Row */}
+      {/* Theme Toggle Switch Row */}
       <div className="pt-4 border-t border-neutral-100 dark:border-neutral-900">
-        <div className="flex items-center justify-between p-2 bg-neutral-50 dark:bg-neutral-900/40 rounded-xl border border-neutral-100 dark:border-neutral-900">
-          <span className="text-[11px] font-mono uppercase tracking-widest font-bold text-neutral-400 dark:text-neutral-500 pl-2">
-            Theme Mode
+        <div className="flex items-center justify-between p-1.5 bg-neutral-50 dark:bg-neutral-900/60 rounded-xl border border-neutral-100 dark:border-neutral-900/60">
+          <span className="text-[10px] font-mono uppercase tracking-widest font-bold text-neutral-400 dark:text-neutral-500 pl-2">
+            Theme
           </span>
-          <button
-            id="theme-toggle-btn"
-            onClick={toggleTheme}
-            className="flex items-center space-x-1.5 px-3 py-1.5 bg-white dark:bg-neutral-950 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-neutral-800 dark:text-neutral-200 rounded-lg shadow-2xs border border-neutral-200 dark:border-neutral-800 text-[11px] font-bold transition-all cursor-pointer"
-          >
-            {isDark ? (
-              <>
-                <Sun className="w-3.5 h-3.5 text-amber-500" />
-                <span>Luxury Light</span>
-              </>
-            ) : (
-              <>
-                <Moon className="w-3.5 h-3.5 text-[#6C4CF1]" />
-                <span>High Contrast Dark</span>
-              </>
-            )}
-          </button>
+          <div className="flex bg-neutral-200/50 dark:bg-neutral-950 p-0.5 rounded-lg border border-neutral-200/30 dark:border-neutral-800">
+            <button
+              onClick={() => { if (isDark && toggleTheme) toggleTheme(); }}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${
+                !isDark 
+                  ? 'bg-white text-neutral-800 shadow-2xs border border-neutral-200/50 font-bold' 
+                  : 'text-neutral-400 hover:text-neutral-200'
+              }`}
+              title="Switch to Luxury Light"
+            >
+              <Sun className="w-3 h-3 text-amber-500" />
+              <span>Light</span>
+            </button>
+            <button
+              onClick={() => { if (!isDark && toggleTheme) toggleTheme(); }}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${
+                isDark 
+                  ? 'bg-neutral-800 text-white shadow-2xs border border-neutral-700/50 font-bold' 
+                  : 'text-neutral-500 hover:text-neutral-800'
+              }`}
+              title="Switch to Midnight Dark"
+            >
+              <Moon className="w-3 h-3 text-indigo-400" />
+              <span>Midnight</span>
+            </button>
+          </div>
         </div>
       </div>
 

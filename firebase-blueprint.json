@@ -334,6 +334,60 @@
         }
       },
       "required": ["adminEmail", "targetEmail", "frequency", "dataType", "format", "status", "createdAt"]
+    },
+    "Invitation": {
+      "title": "Invitation",
+      "description": "Represents a digital invitation created for a birthday plan",
+      "type": "object",
+      "properties": {
+        "invitationId": { "type": "string" },
+        "userId": { "type": "string" },
+        "birthdayPlanId": { "type": "string" },
+        "template": { "type": "string" },
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "pdfUrl": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["invitationId", "userId", "birthdayPlanId", "template", "title", "createdAt", "updatedAt"]
+    },
+    "BookingMessage": {
+      "title": "BookingMessage",
+      "description": "Represents a chat message associated with a specific booking",
+      "type": "object",
+      "properties": {
+        "bookingId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderRole": { "type": "string", "enum": ["customer", "vendor", "admin"] },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["bookingId", "senderId", "senderName", "senderRole", "text", "timestamp"]
+    },
+    "BudgetPlan": {
+      "title": "BudgetPlan",
+      "description": "Represents a custom or AI-generated budget allocation across premium event services",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "totalBudget": { "type": "number" },
+        "eventType": { "type": "string" },
+        "guestCount": { "type": "integer" },
+        "theme": { "type": "string" },
+        "location": { "type": "string" },
+        "explanation": { "type": "string" },
+        "allocatedCategories": {
+          "type": "array",
+          "description": "Allocated categories with costs, percentages, and descriptions"
+        },
+        "warnings": { "type": "array", "items": { "type": "string" } },
+        "savingsSuggestions": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "totalBudget", "eventType", "guestCount", "theme", "location", "allocatedCategories", "createdAt"]
     }
   },
   "firestore": {
@@ -344,6 +398,10 @@
     "/birthdayPlans/{planId}": {
       "schema": "BirthdayPlan",
       "description": "Birthday plans generated or authored by users"
+    },
+    "/birthday_plans/{planId}": {
+      "schema": "BirthdayPlan",
+      "description": "Birthday plans (alternate path)"
     },
     "/vendors/{vendorId}": {
       "schema": "Vendor",
@@ -368,6 +426,18 @@
     "/scheduledExports/{exportId}": {
       "schema": "ScheduledExport",
       "description": "Admins' scheduled automated data export configs"
+    },
+    "/invitations/{invitationId}": {
+      "schema": "Invitation",
+      "description": "Digital invitations created by users"
+    },
+    "/bookingMessages/{messageId}": {
+      "schema": "BookingMessage",
+      "description": "Real-time chat messages between customers, vendors, and admins"
+    },
+    "/budgets/{budgetId}": {
+      "schema": "BudgetPlan",
+      "description": "Bespoke event budget allocations"
     }
   }
 }

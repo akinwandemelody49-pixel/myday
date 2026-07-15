@@ -249,8 +249,11 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
       try {
         const checkResponse = await fetch('/api/check-gemini');
         if (checkResponse.ok) {
-          const checkData = await checkResponse.json();
-          isGeminiConfigured = !!checkData.isConfigured;
+          const contentType = checkResponse.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const checkData = await checkResponse.json();
+            isGeminiConfigured = !!checkData.isConfigured;
+          }
         }
       } catch (checkErr) {
         console.warn("Failed to contact configuration API, falling back to mock detection:", checkErr);
@@ -312,7 +315,12 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
           });
 
           if (response.ok) {
-            aiData = await response.json();
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              aiData = await response.json();
+            } else {
+              throw new Error('Expected JSON response but received non-JSON HTML error page');
+            }
           } else {
             throw new Error(`Server returned status ${response.status}`);
           }
@@ -378,7 +386,12 @@ export const PlanWizard: React.FC<PlanWizardProps> = ({
           });
 
           if (response.ok) {
-            placeholderData = await response.json();
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              placeholderData = await response.json();
+            } else {
+              console.warn('Placeholder response is not JSON');
+            }
           }
         } catch (apiErr) {
           console.warn("Could not get placeholder from server, falling back to client generation:", apiErr);

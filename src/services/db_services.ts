@@ -10,7 +10,8 @@ import {
   query, 
   where, 
   orderBy,
-  limit
+  limit,
+  onSnapshot
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 
@@ -140,7 +141,7 @@ export interface DBBooking {
   userId: string;
   vendorId: string;
   birthdayPlanId: string;
-  bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  bookingStatus: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled' | 'confirmed';
   totalAmount: number;
   paymentStatus: 'unpaid' | 'partial' | 'paid' | 'refunded';
   bookingDate: string;
@@ -407,7 +408,7 @@ export const deleteBirthdayPlan = async (planId: string): Promise<void> => {
       console.warn('Firestore is offline, deleted birthday plan from local cache only.');
       return;
     }
-    handleFirestoreError(error, OperationType.DELETE, path);
+    console.warn(`Firestore delete failed for birthday plan ${planId}, proceeding with local deletion.`, error);
   }
 };
 
@@ -665,3 +666,353 @@ export const getSystemActivityLogs = async (): Promise<DBSystemActivityLog[]> =>
     }
   }
 };
+
+// -----------------------------------------------------------------------------
+// 7. Booking Messages Collection Services (Real-time Customer-Vendor-Admin Chat)
+// -----------------------------------------------------------------------------
+
+export interface DBBookingMessage {
+  id?: string;
+  bookingId: string;
+  senderId: string;
+  senderName: string;
+  senderRole: 'customer' | 'vendor' | 'admin';
+  text: string;
+  timestamp: string;
+}
+
+export const listenToBookingMessages = (
+  bookingId: string, 
+  callback: (messages: DBBookingMessage[]) => void
+) => {
+  const q = query(
+    collection(db, 'bookingMessages'),
+    where('bookingId', '==', bookingId),
+    orderBy('timestamp', 'asc')
+  );
+  return onSnapshot(q, (snapshot) => {
+    const messages: DBBookingMessage[] = [];
+    snapshot.forEach((docSnap) => {
+      messages.push({ ...docSnap.data(), id: docSnap.id } as DBBookingMessage);
+    });
+    callback(messages);
+  }, (error) => {
+    console.warn("Error listening to booking messages (indexes may be compiling):", error);
+    // Fallback to un-ordered query to avoid crashes if single-collection index is building
+    const fallbackQ = query(
+      collection(db, 'bookingMessages'),
+      where('bookingId', '==', bookingId)
+    );
+    onSnapshot(fallbackQ, (fallbackSnapshot) => {
+      const fallbackMsgs: DBBookingMessage[] = [];
+      fallbackSnapshot.forEach((docSnap) => {
+        fallbackMsgs.push({ ...docSnap.data(), id: docSnap.id } as DBBookingMessage);
+      });
+      fallbackMsgs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      callback(fallbackMsgs);
+    });
+  });
+};
+
+export const sendBookingMessage = async (message: Omit<DBBookingMessage, 'id'>): Promise<string> => {
+  const path = 'bookingMessages';
+  try {
+    const docRef = await addDoc(collection(db, 'bookingMessages'), message);
+    return docRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+    throw error;
+  }
+};
+
+// -----------------------------------------------------------------------------
+// 8. AI Budget Plans Collection Services
+// -----------------------------------------------------------------------------
+
+export interface DBBudgetPlan {
+  id?: string;
+  userId: string;
+  totalBudget: number;
+  eventType: string;
+  guestCount: number;
+  theme: string;
+  location: string;
+  explanation: string;
+  allocatedCategories: {
+    categoryName: string;
+    percentage: number;
+    cost: number;
+    description: string;
+  }[];
+  warnings: string[];
+  savingsSuggestions: string[];
+  createdAt: string;
+}
+
+export const saveBudgetPlanToFirestore = async (budgetPlan: DBBudgetPlan): Promise<string> => {
+  const path = 'budgets';
+  const budgetId = budgetPlan.id || doc(collection(db, 'budgets')).id;
+  const dataToSave = { ...budgetPlan, id: budgetId };
+  
+  // Cache locally first
+  try {
+    const cachedBudgetsStr = localStorage.getItem('myday_cached_budgets') || '[]';
+    let cachedBudgets: DBBudgetPlan[] = JSON.parse(cachedBudgetsStr);
+    if (!Array.isArray(cachedBudgets)) cachedBudgets = [];
+    const existingIdx = cachedBudgets.findIndex(b => b.id === budgetId);
+    if (existingIdx >= 0) {
+      cachedBudgets[existingIdx] = dataToSave;
+    } else {
+      cachedBudgets.push(dataToSave);
+    }
+    localStorage.setItem('myday_cached_budgets', JSON.stringify(cachedBudgets));
+  } catch (e) {
+    console.warn('Failed to cache budget locally:', e);
+  }
+
+  try {
+    const docRef = doc(db, 'budgets', budgetId);
+    await setDoc(docRef, dataToSave);
+    return budgetId;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore offline, budget plan stored locally only.');
+      return budgetId;
+    }
+    handleFirestoreError(error, OperationType.WRITE, `budgets/${budgetId}`);
+    throw error;
+  }
+};
+
+export const getBudgetPlansFromFirestore = async (userId: string): Promise<DBBudgetPlan[]> => {
+  const path = 'budgets';
+  try {
+    const q = query(
+      collection(db, 'budgets'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    const budgets: DBBudgetPlan[] = [];
+    querySnapshot.forEach((docSnap) => {
+      budgets.push(docSnap.data() as DBBudgetPlan);
+    });
+
+    // Update cache
+    try {
+      localStorage.setItem('myday_cached_budgets', JSON.stringify(budgets));
+    } catch (e) {
+      console.warn('Failed to cache budgets list:', e);
+    }
+
+    return budgets;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore offline, fetching budgets from local cache.');
+      try {
+        const cachedBudgetsStr = localStorage.getItem('myday_cached_budgets');
+        if (cachedBudgetsStr) {
+          return JSON.parse(cachedBudgetsStr) as DBBudgetPlan[];
+        }
+      } catch (e) {
+        console.warn('Failed to read budgets from cache:', e);
+      }
+      return [];
+    }
+
+    // fallback query without sorting if index is building
+    try {
+      const fallbackQ = query(collection(db, 'budgets'), where('userId', '==', userId));
+      const querySnapshot = await getDocs(fallbackQ);
+      const budgets: DBBudgetPlan[] = [];
+      querySnapshot.forEach((docSnap) => {
+        budgets.push(docSnap.data() as DBBudgetPlan);
+      });
+      budgets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return budgets;
+    } catch (err) {
+      handleFirestoreError(err, OperationType.LIST, path);
+      return [];
+    }
+  }
+};
+
+export const deleteBudgetPlanFromFirestore = async (budgetId: string): Promise<void> => {
+  const path = `budgets/${budgetId}`;
+  
+  // Cache delete
+  try {
+    const cachedBudgetsStr = localStorage.getItem('myday_cached_budgets');
+    if (cachedBudgetsStr) {
+      const cached = JSON.parse(cachedBudgetsStr);
+      if (Array.isArray(cached)) {
+        const filtered = cached.filter(b => b.id !== budgetId);
+        localStorage.setItem('myday_cached_budgets', JSON.stringify(filtered));
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to update budgets list in cache during deletion:', e);
+  }
+
+  try {
+    const docRef = doc(db, 'budgets', budgetId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore offline, budget plan deleted from cache only.');
+      return;
+    }
+    console.warn(`Firestore delete failed for budget plan ${budgetId}, proceeding with local deletion.`, error);
+  }
+};
+
+// -----------------------------------------------------------------------------
+// 9. AI Celebration Timeline Tasks Collection Services
+// -----------------------------------------------------------------------------
+
+export interface DBTimelineTask {
+  id?: string;
+  userId: string;
+  birthdayPlanId: string; // "default" or specific plan ID
+  title: string;
+  description: string;
+  dueDate: string; // ISO string
+  phase: 'planning' | 'booking' | 'invitations' | 'final_touches' | 'day_of';
+  completed: boolean;
+  completedAt?: string | null;
+  linkedType?: 'booking' | 'invitation' | 'budget' | 'none';
+  linkedId?: string;
+  reminderDaysBefore?: number;
+  automaticReminderSent?: boolean;
+  createdAt: string;
+}
+
+export const saveTimelineTaskToFirestore = async (task: DBTimelineTask): Promise<string> => {
+  const taskId = task.id || doc(collection(db, 'timelineTasks')).id;
+  const path = `timelineTasks/${taskId}`;
+  const dataToSave = { ...task, id: taskId };
+
+  // Cache locally first
+  try {
+    const cachedStr = localStorage.getItem('myday_cached_timeline_tasks') || '[]';
+    let cached: DBTimelineTask[] = JSON.parse(cachedStr);
+    if (!Array.isArray(cached)) cached = [];
+    const idx = cached.findIndex(t => t.id === taskId);
+    if (idx >= 0) {
+      cached[idx] = dataToSave;
+    } else {
+      cached.push(dataToSave);
+    }
+    localStorage.setItem('myday_cached_timeline_tasks', JSON.stringify(cached));
+  } catch (e) {
+    console.warn('Failed to cache timeline task locally:', e);
+  }
+
+  try {
+    const docRef = doc(db, 'timelineTasks', taskId);
+    await setDoc(docRef, dataToSave);
+    return taskId;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore offline, timeline task saved locally only.');
+      return taskId;
+    }
+    handleFirestoreError(error, OperationType.WRITE, path);
+    throw error;
+  }
+};
+
+export const getTimelineTasksFromFirestore = async (userId: string, birthdayPlanId?: string): Promise<DBTimelineTask[]> => {
+  const path = 'timelineTasks';
+  try {
+    let q = query(
+      collection(db, 'timelineTasks'),
+      where('userId', '==', userId)
+    );
+    if (birthdayPlanId) {
+      q = query(
+        collection(db, 'timelineTasks'),
+        where('userId', '==', userId),
+        where('birthdayPlanId', '==', birthdayPlanId)
+      );
+    }
+    const querySnapshot = await getDocs(q);
+    const tasks: DBTimelineTask[] = [];
+    querySnapshot.forEach((docSnap) => {
+      tasks.push(docSnap.data() as DBTimelineTask);
+    });
+
+    // Update cache
+    try {
+      localStorage.setItem('myday_cached_timeline_tasks', JSON.stringify(tasks));
+    } catch (e) {
+      console.warn('Failed to cache timeline tasks:', e);
+    }
+
+    return tasks;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore offline, loading timeline tasks from local cache.');
+      try {
+        const cachedStr = localStorage.getItem('myday_cached_timeline_tasks');
+        if (cachedStr) {
+          const cached = JSON.parse(cachedStr) as DBTimelineTask[];
+          if (birthdayPlanId) {
+            return cached.filter(t => t.userId === userId && t.birthdayPlanId === birthdayPlanId);
+          }
+          return cached.filter(t => t.userId === userId);
+        }
+      } catch (e) {
+        console.warn('Failed to read timeline tasks from cache:', e);
+      }
+      return [];
+    }
+
+    // fallback query without sorting if index is building
+    try {
+      const fallbackQ = query(collection(db, 'timelineTasks'), where('userId', '==', userId));
+      const querySnapshot = await getDocs(fallbackQ);
+      const tasks: DBTimelineTask[] = [];
+      querySnapshot.forEach((docSnap) => {
+        tasks.push(docSnap.data() as DBTimelineTask);
+      });
+      if (birthdayPlanId) {
+        return tasks.filter(t => t.birthdayPlanId === birthdayPlanId);
+      }
+      return tasks;
+    } catch (err) {
+      handleFirestoreError(err, OperationType.LIST, path);
+      return [];
+    }
+  }
+};
+
+export const deleteTimelineTaskFromFirestore = async (taskId: string): Promise<void> => {
+  const path = `timelineTasks/${taskId}`;
+  
+  // Cache delete
+  try {
+    const cachedStr = localStorage.getItem('myday_cached_timeline_tasks');
+    if (cachedStr) {
+      const cached = JSON.parse(cachedStr);
+      if (Array.isArray(cached)) {
+        const filtered = cached.filter(t => t.id !== taskId);
+        localStorage.setItem('myday_cached_timeline_tasks', JSON.stringify(filtered));
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to delete timeline task from cache:', e);
+  }
+
+  try {
+    const docRef = doc(db, 'timelineTasks', taskId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    if (isOfflineError(error)) {
+      console.warn('Firestore offline, timeline task deleted from cache only.');
+      return;
+    }
+    console.warn(`Firestore delete failed for timeline task ${taskId}, proceeding with local deletion.`, error);
+  }
+};
+

@@ -142,6 +142,11 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
 
       if (!response.ok) throw new Error('API failed');
 
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Received non-JSON response from server');
+      }
+
       const data = await response.json();
       
       // Update the plan with new refined data in real time!

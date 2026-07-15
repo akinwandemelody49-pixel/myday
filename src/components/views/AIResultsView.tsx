@@ -16,6 +16,7 @@ interface AIResultsViewProps {
   onEditPlan?: () => void;
   onBookVendors?: () => void;
   onSharePlan?: () => void;
+  onDesignInvitation?: () => void;
   onBack: () => void;
   showNotification: (message: string) => void;
 }
@@ -26,6 +27,7 @@ export const AIResultsView: React.FC<AIResultsViewProps> = ({
   onEditPlan,
   onBookVendors,
   onSharePlan,
+  onDesignInvitation,
   onBack,
   showNotification,
 }) => {
@@ -682,6 +684,17 @@ export const AIResultsView: React.FC<AIResultsViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
+            {onDesignInvitation && (
+              <Button
+                variant="outline"
+                onClick={onDesignInvitation}
+                className="px-6 h-[52px] rounded-xl text-[15px] uppercase tracking-wider border-amber-500/20 hover:border-amber-500 text-amber-600 hover:text-amber-700 flex items-center justify-center space-x-2 bg-white font-bold"
+              >
+                <Sparkles className="w-4.5 h-4.5 text-[#F4B400] animate-pulse" />
+                <span>AI Invitation Studio</span>
+              </Button>
+            )}
+
             <Button
               variant="outline"
               onClick={handleGenerateInviteLink}
