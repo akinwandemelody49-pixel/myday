@@ -99,9 +99,9 @@ html.dark input[type="date"],
 html.dark input[type="time"],
 html.dark select,
 html.dark textarea {
-  background-color: #0E0D16 !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  color: #F1F5F9 !important;
+  background-color: #0E0D16;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #F1F5F9;
 }
 
 html.dark input:focus, 

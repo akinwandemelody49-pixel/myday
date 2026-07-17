@@ -120,6 +120,7 @@ export interface VendorApplication {
   category: string;
   state: string;
   city: string;
+  lga?: string; // Local Government Area
   address: string;
   yearsInBusiness: number;
   description: string;
@@ -128,6 +129,16 @@ export interface VendorApplication {
   tiktok: string;
   website?: string;
   logo: string;
+  coverPhoto?: string; // New: cover photo url
+  cacNumber?: string; // New: CAC registration number
+  languagesSpoken?: string[]; // New: languages spoken list
+  minPrice?: number; // New: pricing info
+  maxPrice?: number; // New: pricing info
+  avgPrice?: number; // New: pricing info
+  govIdUrl?: string; // New: trust & verification document
+  businessRegUrl?: string; // New: trust & verification document
+  certificatesUrls?: string[]; // New: trust & verification document
+  verificationBadgeRequested?: boolean; // New: custom request
   portfolioImages: string[];
   priceList?: string;
   status: 'Pending' | 'Approved' | 'Rejected';

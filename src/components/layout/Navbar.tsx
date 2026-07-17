@@ -345,7 +345,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
 
               {/* Notification Bell */}
-              <div className="relative group/bell">
+              <div className="relative group">
                 <button 
                   onClick={() => setActiveTab('notifications')}
                   className="p-2 text-neutral-500 hover:text-[#6C4CF1] dark:text-neutral-400 dark:hover:text-[#8B73FF] hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded-full transition-colors relative cursor-pointer"
